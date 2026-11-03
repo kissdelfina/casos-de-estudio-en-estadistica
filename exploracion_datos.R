@@ -4,8 +4,8 @@ library(ggplot2)
 library(patchwork)
 library(tidyr)
 
-BA_v_2018_9 <- read.csv2("Datos TP FINAL/BA_v-21_05_2018-27_12_2019.txt")
-BA_v_2020 <- read.csv2("Datos TP FINAL/BA_v-02_03_2020-22_12_2020.txt")
+BA_v_2018_9 <- read.csv2("Datos TP FINAL/BA-v/BA_v-21_05_2018-27_12_2019.txt")
+BA_v_2020 <- read.csv2("Datos TP FINAL/BA-v/BA_v-02_03_2020-22_12_2020.txt")
 
 # Función para procesar y generar el gráfico apilado
 plot_hobo <- function(data, titulo, breaks_x = "3 months") {
@@ -128,3 +128,93 @@ g_interaccion_2d <- ggplot(df_corr, aes(x = Temp, y = RH)) +
   )
 
 print(g_interaccion_2d)
+
+
+
+
+library(readxl)
+library(lubridate)
+library(tidyverse)
+library(nlme)
+
+# ventana de tiempo
+evaluar_ventanas_inercia <- function(df_serie, smn_datos) {
+  etiqueta <- unique(df_serie$Etiqueta_Unica)
+  
+  # 1. Armar grilla continua y calcular ventanas desde 1 hasta 5 días
+  grilla <- data.frame(Date = seq(min(df_serie$Date), max(df_serie$Date), by = "day"))
+  
+  df_comp <- grilla %>%
+    left_join(smn_datos, by = "Date") %>%
+    left_join(df_serie, by = "Date") %>%
+    arrange(Date) %>%
+    mutate(
+      prom1d = TMAX,
+      prom2d = (TMAX + lag(TMAX, 1)) / 2,
+      prom3d = (TMAX + lag(TMAX, 1) + lag(TMAX, 2)) / 3,
+      prom4d = (TMAX + lag(TMAX, 1) + lag(TMAX, 2) + lag(TMAX, 3)) / 4,
+      prom5d = (TMAX + lag(TMAX, 1) + lag(TMAX, 2) + lag(TMAX, 3) + lag(TMAX, 4)) / 5,
+      yday = yday(Date),
+      sin_year = sin(2 * pi * yday / 365.25),
+      cos_year = cos(2 * pi * yday / 365.25)
+    )
+  
+  # Filtrar filas sin NAs en ninguna de las ventanas candidatas (para asegurar datos idénticos en la comparación)
+  df_train <- df_comp %>%
+    filter(!is.na(temp_max) & !is.na(prom5d)) %>%
+    mutate(t = as.integer(Date - min(Date)))
+  
+  if (nrow(df_train) < 30) return(NULL)
+  
+  # 2. Ajustar un modelo GLS por cada ventana de retraso
+  ventanas <- c("prom1d", "prom2d", "prom3d", "prom4d", "prom5d")
+  modelos <- list()
+  
+  for (v in ventanas) {
+    formula_mod <- as.formula(paste("temp_max ~", v, "+ sin_year + cos_year"))
+    
+    mod <- tryCatch({
+      gls(formula_mod, data = df_train, correlation = corAR1(form = ~ t))
+    }, error = function(e) {
+      gls(formula_mod, data = df_train)
+    })
+    
+    modelos[[v]] <- mod
+  }
+  
+  # 3. Comparar modelos mediante AIC y R²
+  resumen_comparativo <- map_dfr(names(modelos), function(v) {
+    m <- modelos[[v]]
+    pred <- predict(m, newdata = df_train)
+    r_val <- cor(df_train$temp_max, pred)
+    
+    data.frame(
+      Etiqueta = etiqueta,
+      Ventana_Inercia = v,
+      AIC = AIC(m),
+      R2 = r_val^2,
+      Correlacion = r_val
+    )
+  })
+  
+  # Ordenar por el mejor AIC (menor es mejor)
+  resumen_comparativo <- resumen_comparativo %>% arrange(AIC)
+  return(resumen_comparativo)
+}
+
+# aplicar a las salas
+series_list <- split(datos_sensores, datos_sensores$Etiqueta_Unica)
+tabla_comparativa_ventanas <- map_dfr(series_list, ~ evaluar_ventanas_inercia(.x, smn_clean))
+
+# Ver el resumen completo de comparación
+print(tabla_comparativa_ventanas)
+
+# Ver cuál fue la ventana GANADORA para cada sala
+tabla_ganadoras <- tabla_comparativa_ventanas %>%
+  group_by(Etiqueta) %>%
+  slice_min(order_by = AIC, n = 1) %>%
+  ungroup() %>%
+  select(Etiqueta, Ventana_Ganadora = Ventana_Inercia, AIC, R2)
+
+cat("\n=== MEJOR VENTANA DE INERCIA SELECCIONADA POR SALA ===\n")
+print(tabla_ganadoras)
