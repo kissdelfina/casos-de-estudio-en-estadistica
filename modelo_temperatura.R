@@ -26,17 +26,19 @@ extraer_info_sala <- function(filepath) {
   fname_clean <- gsub("[-_]\\d{1,2}[-_]\\d{1,2}[-_]\\d{2,4}[-_]\\d{1,2}[-_]\\d{1,2}[-_]\\d{2,4}", "", fname)
   fname_clean <- gsub("\\.txt$", "", fname_clean)
   
-  # Extraer subsector si existe (Anexo, Ameghino, Coleccion, Laboratorio, Abajo, Arriba)
-  subsector <- "General / Normal"
+  # Extraer subsector si existe
+  subsector <- "General"
   if (grepl("Anexo", fname_clean, ignore.case = TRUE)) subsector <- "Anexo"
   if (grepl("Ameghino", fname_clean, ignore.case = TRUE)) subsector <- "Ameghino"
   if (grepl("coleccion", fname_clean, ignore.case = TRUE)) subsector <- "Colección"
   if (grepl("laboratorio", fname_clean, ignore.case = TRUE)) subsector <- "Laboratorio"
   if (grepl("abajo", fname_clean, ignore.case = TRUE)) subsector <- "Abajo"
   if (grepl("arriba", fname_clean, ignore.case = TRUE)) subsector <- "Arriba"
+  if (grepl("azara", fname_clean, ignore.case = TRUE) || grepl("04-01_2021", fname)) subsector <- "Azara"
+  if (grepl("MACN-Or-03_02_2020", fname)) subsector <- "Antigua"
   
   # Extraer nombre base de la sala (ej: MACN_Pv, BA_v, MACN_Ict)
-  sala_base <- gsub("[-_](Anexo|Ameghino|coleccion|laboratorio|abajo|arriba)", "", fname_clean, ignore.case = TRUE)
+  sala_base <- gsub("[-_](Anexo|Ameghino|coleccion|laboratorio|abajo|arriba|azara|antigua)", "", fname_clean, ignore.case = TRUE)
   sala_base <- gsub("-", "_", sala_base)
   
   return(list(
@@ -46,26 +48,37 @@ extraer_info_sala <- function(filepath) {
   ))
 }
 
-path_carpeta <- "~/Documents/UBA/Casos de Estudio en Estadística/Casos de Estudio en Estadística/Datos TP FINAL/No HOBO"
+path_carpeta <- "Datos TP FINAL/No HOBO"
 archivos_txt <- list.files(path = path_carpeta, pattern = "\\.txt$", full.names = TRUE)
 
 datos_sensores <- map_dfr(archivos_txt, function(path) {
-  df <- read.delim(path, sep = ";")
+  df <- read.csv2(path, stringsAsFactors = FALSE)
   if (!"Date" %in% colnames(df) || !"Temp...C" %in% colnames(df)) return(NULL)
   
   info <- extraer_info_sala(path)
   
-  df %>%
+  df_limpio <- df %>%
     mutate(
-      Date = as.Date(parse_date_time(Date, orders = c("dmy", "ymd", "mdy"))),
-      temp_max = as.numeric(gsub(",", ".", Temp...C)),
+      Date = dmy(Date),
+      temp = as.numeric(gsub(",", ".", Temp...C))
+    ) %>%
+    filter(!is.na(Date) & !is.na(temp))
+  
+  if (nrow(df_limpio) == 0) return(NULL)
+  
+  # Descartar primer y último día del archivo (incompletos)
+  fecha_min <- min(df_limpio$Date)
+  fecha_max <- max(df_limpio$Date)
+  
+  df_limpio %>%
+    filter(Date > fecha_min & Date < fecha_max) %>%
+    group_by(Date) %>%
+    summarise(temp_max = max(temp, na.rm = TRUE), .groups = "drop") %>%
+    mutate(
       Sala_Base = info$Sala_Base,
       Subsector = info$Subsector,
       Etiqueta_Unica = info$Etiqueta_Unica
-    ) %>%
-    group_by(Sala_Base, Subsector, Etiqueta_Unica, Date) %>%
-    summarise(temp_max = max(temp_max, na.rm = TRUE), .groups = "drop") %>%
-    filter(!is.na(Date) & !is.infinite(temp_max))
+    )
 })
 
 # gls
@@ -113,15 +126,20 @@ procesar_serie <- function(df_serie, smn_datos) {
   
   r_val <- cor(df_train$temp_max, predict(modelo, newdata = df_train))
   
+  t_tab <- summary(modelo)$tTable
+  pendiente <- round(t_tab["TMAX_prom3d", "Value"], 4)
+  se_pendiente <- round(t_tab["TMAX_prom3d", "Std.Error"], 4)
+  phi_ar1 <- round(coef(modelo$modelStruct$corStruct, unconstrained = FALSE), 3)
+  
   list(
     predicciones = df_pred,
     metricas = data.frame(
       Etiqueta = etiqueta,
-      Sala_Base = sala,
-      Subsector = subsector,
       N_obs = nrow(df_train),
-      R2 = round(r_val^2, 4),
-      Correlacion = round(r_val, 4)
+      Pendiente = pendiente,
+      EE = se_pendiente,
+      Phi_AR1 = phi_ar1,
+      R2 = round(r_val^2, 4)
     )
   )
 }
@@ -129,7 +147,11 @@ procesar_serie <- function(df_serie, smn_datos) {
 series_list <- split(datos_sensores, datos_sensores$Etiqueta_Unica)
 resultados <- map(series_list, ~ procesar_serie(.x, smn_clean)) %>% compact()
 
-metricas_todas <- map_dfr(resultados, "metricas")
+metricas_todas <- map_dfr(resultados, "metricas") %>%
+  arrange(desc(Pendiente))
+
+cat("\n=== RESULTADOS DEL MODELO GLS EN TODAS LAS SALAS ===\n")
+print(as.data.frame(metricas_todas))
 predicciones_todas <- map_dfr(resultados, "predicciones")
 
 # salas y sub-sectores
@@ -176,3 +198,7 @@ g_pv <- ggplot(pred_pv, aes(x = Date, group = Subsector, color = Subsector)) +
   )
 
 print(g_pv)
+
+# Guardar figura para el informe
+ggsave("fig_modelo_pv.png", g_pv, width = 8, height = 4.5, dpi = 300)
+ggsave("fig_modelo_todas_salas.png", g_general, width = 10, height = 7, dpi = 300)

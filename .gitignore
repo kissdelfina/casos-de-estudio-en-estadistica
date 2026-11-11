@@ -1,7 +1,41 @@
-.claude/
+# ── macOS ─────────────────────────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverrideF
 
-# Descripción del xlsx del SMN 1991-2020 (viene en el .rar del SMN)
+# ── R / RStudio ───────────────────────────────────────────────────────────────
+.Rhistory
+.Rapp.history
+.RData
+.Ruserdata
+.Rproj.user/
+Rplots.pdf
+
+# ── LaTeX (archivos generados al compilar) ────────────────────────────────────
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.synctex(busy)
+*.bbl
+*.blg
+*.nav
+*.snm
+*.vrb
+latex/caratula.log
+
+# ── Archivos pesados / datos crudos (ya están en Drive/etc.) ─────────────────
 Datos TP FINAL/LEAME_SMN.xlsx
 
+<<<<<<< Updated upstream
 # Gráficos que genera Rscript al correr un script fuera de RStudio
 Rplots.pdf
+=======
+.claude/
+CLAUDE.md
+>>>>>>> Stashed changes
