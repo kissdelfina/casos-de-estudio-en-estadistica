@@ -2,3 +2,6 @@
 
 # Descripción del xlsx del SMN 1991-2020 (viene en el .rar del SMN)
 Datos TP FINAL/LEAME_SMN.xlsx
+
+# Gráficos que genera Rscript al correr un script fuera de RStudio
+Rplots.pdf

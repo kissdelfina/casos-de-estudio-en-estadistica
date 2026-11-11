@@ -14,7 +14,7 @@ gls(temp_max ~ TMAX * HUM_REL, correlation = corAR1(form = ~ t))
 
 ## Problemas
 
-- **Datos exteriores fuera del repo:** los de 2016 vienen de `smn_datos_meteorologicos_1991_2020.xlsx` (72 MB, ignorado por git). Cada uno lo tiene que descargar del SMN y ponerlo en `Datos TP FINAL/`. Cubre los 80 días del período con `TMAX` y `HUM_REL` completos.
+- **Datos exteriores de 2016:** vienen de `smn_datos_meteorologicos_1991_2020.xlsx` (72 MB, commiteado en `64969b7`, así que ya no hace falta descargarlo). Cubre los 80 días del período con `TMAX` y `HUM_REL` completos.
 - **Rutas absolutas:** el script lee los datos desde `D:/...`. Hay que cambiarlas por rutas relativas al repo.
 - **Un solo período:** son unos 80 días de otoño, así que no se puede estimar la estacionalidad.
 - **`max()` sobre texto:** la temperatura se lee como texto por la coma decimal y `max()` la compara alfabéticamente. Hay que convertirla a número antes de resumir, o leer con `read.csv2`.
