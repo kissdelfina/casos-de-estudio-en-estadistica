@@ -5,7 +5,7 @@ library(nlme)
 library(ggplot2)
 
 # 1. CARGA Y PREPROCESAMIENTO
-path_macn_ma <- "~/Documents/UBA/Casos de Estudio en Estadística/Casos de Estudio en Estadística/Datos TP FINAL/MACN-Ma/MACN-Ma-03_02_2020-22_12_2020.txt"
+path_macn_ma <- "Datos TP FINAL/MACN-Ma/MACN-Ma-03_02_2020-22_12_2020.txt"
 targets_raw <- read.delim(path_macn_ma, sep = ";")
 
 targets <- targets_raw %>%

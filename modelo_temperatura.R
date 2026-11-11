@@ -200,5 +200,5 @@ g_pv <- ggplot(pred_pv, aes(x = Date, group = Subsector, color = Subsector)) +
 print(g_pv)
 
 # Guardar figura para el informe
-ggsave("fig_modelo_pv.png", g_pv, width = 8, height = 4.5, dpi = 300)
-ggsave("fig_modelo_todas_salas.png", g_general, width = 10, height = 7, dpi = 300)
+ggsave("graficos/fig_modelo_pv.png", g_pv, width = 8, height = 4.5, dpi = 300)
+ggsave("graficos/fig_modelo_todas_salas.png", g_general, width = 10, height = 7, dpi = 300)

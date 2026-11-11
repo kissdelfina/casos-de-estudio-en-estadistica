@@ -4,7 +4,7 @@ library(lubridate)
 library(readxl)
 library(patchwork)
 
-archivos_capturas <- list.files("capturas", recursive = TRUE, full.names = TRUE, pattern = "[.]csv$")
+archivos_capturas <- list.files("Capturas", recursive = TRUE, full.names = TRUE, pattern = "[.]csv$")
 
 df_capturas <- map_dfr(archivos_capturas, function(f) {
   partes <- strsplit(f, "/")[[1]]
@@ -138,5 +138,5 @@ g2 <- ggplot(df_analisis %>% filter(!is.na(tasa_diaria) & dias_exp < 100),
 print(g2)
 
 # Guardar figuras para el informe
-ggsave("fig_trampas_temporal.png", g1, width = 8, height = 5, dpi = 300)
-ggsave("fig_trampas_temperatura.png", g2, width = 8, height = 4, dpi = 300)
+ggsave("graficos/fig_trampas_temporal.png", g1, width = 8, height = 5, dpi = 300)
+ggsave("graficos/fig_trampas_temperatura.png", g2, width = 8, height = 4, dpi = 300)

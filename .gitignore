@@ -1,7 +1,7 @@
 # ── macOS ─────────────────────────────────────────────────────────────────────
 .DS_Store
 .AppleDouble
-.LSOverrideF
+.LSOverride
 
 # ── R / RStudio ───────────────────────────────────────────────────────────────
 .Rhistory
@@ -32,8 +32,6 @@ latex/caratula.log
 # ── Archivos pesados / datos crudos (ya están en Drive/etc.) ─────────────────
 Datos TP FINAL/LEAME_SMN.xlsx
 
-# Gráficos que genera Rscript al correr un script fuera de RStudio
-Rplots.pdf
 .claude/
 CLAUDE.md
 
