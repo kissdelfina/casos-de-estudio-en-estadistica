@@ -142,12 +142,43 @@ Finalmente, contamos con registros de capturas de coleópteros y lepidópteros e
 Para tener un registro completo y estandarizado, se eliminaron las observaciones de los bordes, es decir, el primer y último día de muestreo de cada despliegue por estar incompletos. Asimismo, se corrigió la identificación de dataloggers superpuestos en series complejas como Ornitología (diferenciando las colecciones Antigua y Azara)...
 
 \subsection{Estrategia de modelado estadístico}
+\subsubsection{Caso de la temperatura}
 Se decidió tomar como variables a predecir la temperatura máxima y mínima de la sala, elegida como el máximo y el mínimo respectivamente entre las observadas por tener una correspondencia directa con las mismas presentes en los datos del SMN. Para inferir ($T_{\text{max, int}}$) y ($T_{\text{min, int}}$) primero se implementaron modelos de regresión lineal generalizada de la siguiente forma:
 \begin{equation}
-    T_{\text{max, int}}(t) = \beta_0 + \beta_1 \, \overline{T}_{\text{ext, } k}(t) + \gamma_1 \sin\left(\frac{2\pi t}{365{,}25}\right) + \gamma_2 \cos\left(\frac{2\pi t}{365{,}25}\right) + \varepsilon(t)
-    T_{\text{min, int}}(t) = \beta_0 + \beta_1 \, \overline{T}_{\text{min, } k}(t) + \gamma_1 \sin\left(\frac{2\pi t}{365{,}25}\right) + \gamma_2 \cos\left(\frac{2\pi t}{365{,}25}\right) + \varepsilon(t)
+    T_{\text{max, int}}(t) = \beta_0 + \beta_1 \, \overline{T}_{\text{max, ext } k}(t) + \gamma_1 \sin\left(\frac{2\pi t}{365{,}25}\right) + \gamma_2 \cos\left(\frac{2\pi t}{365{,}25}\right) + \varepsilon(t) 
+    \\
 \end{equation}
-En estas ecuaciones $\overline{T}_{\text{ext, } k}$ y  representan el promedio móvil exterior de $k$ días y $\varepsilon(t) = \phi \, \varepsilon(t-1) + u(t)$ captura la fuerte autocorrelación serial intrínseca de los datos diarios ($AR(1)$).
+\begin{equation}
+    T_{\text{min, int}}(t) = \beta_0 + \beta_1 \, \overline{T}_{\text{min, ext } k}(t) + \gamma_1 \sin\left(\frac{2\pi t}{365{,}25}\right) + \gamma_2 \cos\left(\frac{2\pi t}{365{,}25}\right) + \varepsilon(t)
+\end{equation}
+En estas ecuaciones $\overline{T}_{\text{ext, } k}$ y  representan el promedio móvil exterior de $k$ días y $\varepsilon(t) = \phi \, \varepsilon(t-1) + u(t)$ captura la fuerte autocorrelación serial intrínseca de los datos diarios ($AR(1)$). Este intenta resumir la información de temperatura durante el mísmo día y los $k-1$ previos al que se busca predecir. La importancia de tener información pasada es por el efecto aislante que puede tener la infraestructura del museo, es decir, los materiales de muros, ventanas y puertas sumado a condiciones propias de los ambientes pueden hacer que los efectos climáticos lleguen con retraso. Asimismo, las funciones sinusoidales del tiempo buscan representar el efecto de la estación, pues mapean los 365.25 días del año al intervalo $[-1,1]$ lo cual permite conectar el día 1 con el 365.
+
+Posteriormente se implementó un modelo rezagado, generalmente usado en series de tiempo, conocido como modelo de rezagos distribuidos que no solo contiene la correlación de los errores por ser días consecutivos si no también incorpora como variables predictoras a los k-1 días previos al evento como se ve en las ecuaciones~\ref{eq:ecuacion_rezagados_max} y ~\ref{eq:ecuacion_rezagados_min}.
+
+\begin{equation}
+T_{\text{max, int}}(t) = \beta_0 + \, \sum_{i=t-k}^{t}\beta_iT_{\text{max, ext, } i} + \gamma_1 \sin\left(\frac{2\pi t}{365{,}25}\right) + \gamma_2 \cos\left(\frac{2\pi t}{365{,}25}\right) + \varepsilon(t)
+\label{eq:ecuacion_rezagados_max}
+\end{equation}
+\\
+\begin{equation}
+T_{\text{min, int}}(t) = \beta_0 + \, \sum_{i=t-k}^{t}\beta_iT_{\text{min, ext, } i} + \gamma_1 \sin\left(\frac{2\pi t}{365{,}25}\right) + \gamma_2 \cos\left(\frac{2\pi t}{365{,}25}\right) + \varepsilon(t)
+\label{eq:ecuacion_rezagados_min}
+\end{equation}
+
+Se puede apreciar como el modelo de promedio es un caso particular de este, donde los coeficientes de los días son iguales y se encuentran divididos por k, por lo que este modelo a pesar de tener más complejidad tiene mayor capacidad expresiva. Se experimentó con k para encontrar la cantidad de días necesarios para tener la mejor explicación de la temperatura interna en cada una de las salas.
+
+Por último, se tomaron las ecuaciones~\ref{eq:ecuacion_rezagados_max} y ~\ref{eq:ecuacion_rezagados_min} y se suprimió el uso de la variable predictora que corresponde al mismo día $t$. Esta decisión se tomo con dos objetivos: primero, observar que tan importante es el efecto directo de la temperatura exterior y, segundo, ver que la factibilidad de predecir la temperatura interior el día $t$ a partir de la exterior en los $k-1$ días anteriores. La evaluación llevada a cabo fue por una ventana deslizante, es decir, se entrena al modelo con $p$ días y se ve que tan bien predice el día $p+1$, consiguiendo una evaluación de desempeño moviendo el p por una unidad. 
+
+\subsubsection{Caso de predicción de plagas}
+Para estudiar la aparición de coleópteros y lepidópteros propusimos un modelo lineal generalizado poisson. Esta elección es sirve como base para cualquier problema de conteo (es decir, predicción de un número entero positivo de eventos en el tiempo) y usamos una ecuación de la forma:
+
+\begin{equation}
+Y \sim Poisson(\lambda) \\
+\end{equation}
+\begin{equation}
+log(\mathbb{E}[Y]) = \beta_0 + \beta_1 Temp + \beta_2 Hum +\epsilon_t
+\label{eq:modelo_poisson}
+\end{equation}
 
 % ==============================================================================
 % 5. RESULTADOS
