@@ -61,13 +61,13 @@
 
 \fecha{\today}
 \materia{Casos de Estudio en Estadística}
-\submateria{Solicitante: Área de Conservación Preventiva (MACN)}
-\grupo{Grupo 42}
+\submateria{Solicitante: Soledad Tancoff (MACN)}
+\grupo{Grupo 3}
 
 % Integrantes del grupo (Nombre, LU, email)
-\integrante{Calo, Agustín}{LU2}{email2@ejemplo.com}
-\integrante{Cogno, Matías}{LU2}{email2@ejemplo.com}
-\integrante{Bravo, Ivan Agustín}{LU2}{email2@ejemplo.com}
+\integrante{Calo, Agustín}{390/23}{caloagustin4@ejemplo.com}
+\integrante{Cogno, Matías}{944/22}{matysbn@gmail.com}
+\integrante{Bravo, Ivan Agustín}{786/23}{bravoivanagustin@gmail.com}
 \integrante{Kiss, Delfina}{72/23}{kissdelfina@gmail.com}
 
 
@@ -81,9 +81,9 @@
 % ==============================================================================
 \section{Resumen}
 
-\textbf{Contexto y Problema:} La conservación preventiva de colecciones biológicas históricas depende críticamente de la estabilidad microclimática en las salas de guarda. Variaciones bruscas de temperatura o niveles elevados de humedad relativa pueden provocar fatiga estructural en los ejemplares o favorecer la proliferación de insectos perjudiciales (como coleópteros y lepidópteros de museos). En este trabajo se analiza el grado de acoplamiento térmico entre las condiciones meteorológicas exteriores registradas por el Servicio Meteorológico Nacional (SMN) y el microclima interno de diversas salas del Museo Argentino de Ciencias Naturales (MACN) y colecciones asociadas, evaluando asimismo la relación con las capturas de insectos en trampas de monitoreo.
+\textbf{Contexto y Problema:} La conservación preventiva de colecciones de material orgánico históricas depende críticamente de la estabilidad microclimática en las salas de guarda. Variaciones bruscas de temperatura o niveles elevados de humedad relativa pueden provocar fatiga estructural en los ejemplares o favorecer la proliferación de insectos perjudiciales como los son los coleópteros y lepidópteros. En este trabajo se analiza el grado de acoplamiento térmico entre las condiciones meteorológicas exteriores registradas por el Servicio Meteorológico Nacional (SMN) y el microclima interno de diversas salas del Museo Argentino de Ciencias Naturales (MACN) y colecciones asociadas, evaluando asimismo la relación con las capturas de insectos en trampas de monitoreo.
 
-\textbf{Metodología:} Se procesaron registros continuos de temperatura y humedad tomados con sensores HOBO en 14 sectores y salas. Para evitar inferencias espurias debidas a la fuerte autocorrelación temporal, se ajustaron modelos de mínimos cuadrados generalizados (GLS) con estructura autorregresiva de primer orden ($AR(1)$) y armónicos anuales. La inercia térmica de cada espacio se determinó mediante la comparación de ventanas de promedio móvil exterior. Paralelamente, se exploraron las tasas de captura de insectos mediante modelos para datos de conteo con offset temporal para estandarizar los intervalos de exposición.
+\textbf{Metodología:} Se procesaron registros continuos de temperatura y humedad capturados por un conjunto reducido de sensores HOBO. Estos fueron colocados, generalmente a lo largo de todo un año, en alguno de los catorce sectores o salas del museo, exceptuando ciertas ocaciones donde se ubicaron dos en la misma sala con fines particulares. Para evitar inferencias espurias debidas a la fuerte autocorrelación temporal, se ajustaron modelos de mínimos cuadrados generalizados (GLS) con estructura autorregresiva de primer orden ($AR(1)$) y armónicos anuales. La inercia térmica de cada espacio se determinó mediante la comparación de ventanas de promedio móvil exterior. Paralelamente, se exploraron las tasas de captura de insectos mediante modelos para datos de conteo con offset temporal para estandarizar los intervalos de exposición.
 
 \textbf{Principales Hallazgos:} Los resultados revelan dos regímenes térmicos bien diferenciados dentro del museo: (1) \textit{Salas permeables o expuestas} (e.g., Paleovertebrados Anexo y Arácnidos), caracterizadas por una rápida respuesta al exterior (inercia de 2 días), pendientes elevadas ($\beta \approx 0{,}50 - 0{,}62\,^\circ\text{C}_\text{int}/^\circ\text{C}_\text{ext}$) y una marcada amplitud térmica diaria; y (2) \textit{Salas aisladas o con alta inercia} (e.g., Ictiología Colección, Ornitología y Paleovertebrados Ameghino), que presentan una inercia de 4 a 7 días, menor transmisión de calor ($\beta \approx 0{,}07 - 0{,}17$) y una memoria propia dominante ($\phi > 0{,}90$). En cuanto al riesgo biológico, la tasa diaria de capturas de plagas exhibe una fuerte estacionalidad asociada a la temperatura ($p = 0{,}017$), observándose un incremento de la actividad en los meses estivales.
 
@@ -111,22 +111,43 @@ Las colecciones de historia natural albergan bienes culturales y científicos ir
 \section{Metodología}
 
 \subsection{Fuente de datos}
-Se utilizaron dos fuentes de datos principales:
-\begin{itemize}
-    \item \textbf{Exterior:} Datos meteorológicos diarios de la estación Buenos Aires Observatorio Central (OMM 87585) del Servicio Meteorológico Nacional (SMN).
-    \item \textbf{Interior:} Registros periódicos de temperatura, humedad relativa y punto de rocío obtenidos mediante dataloggers HOBO.
-    \item \textbf{Biológico:} Registros de capturas en trampas de monitoreo de coleópteros y lepidópteros en las salas MACN-Ba, MACN-En y MACN-Ma.
-\end{itemize}
+Se utilizaron dos fuentes de datos principales, siendo estas mediciones de las condiciones internas mediante sensores y registros históricos de clima en la Ciudad de Buenos Aires provisto por el Servicio Meteorológico Nacional.
+Los datos de interiores fueron captados por dispositivos \href{https://www.hobodataloggers.com/products/data-loggers/mx2301a?zCountry=AR}{HOBO}, capaces de tomar medidas de la temperatura y humedad relativa del ambiente en intervalos fijos de tiempo con un error aproximado de un minuto. La temperatura medida tiene un error ±0.2°C en el rango de 0 hasta 70°C y la humedad de ±2.5\% entre 10\% y 90\%. Su resolución de temperatura es de 0.02-0.04°C con un corrimiento anual menor a 0.01°C y para humedad es de 0.01\% con corrimiento menor a 1\% anual. Los intervalos de tiempo presentenes en nuestros datos son variables, siendo el preponderante el de cada cuatro horas.
+Estos fueron colocados en alguna de las 14 secciones etiquetas, que pueden ser la sala entera o una región de la misma. El tiempo que se encuentran en determinada ubicación depende de si se encuentran allí para monitorear situaciones puntuales o como control general. Por esta razón cada sala cuenta con una cantidad variable de mediciones a lo largo de uno o varios años como podemos observar en la Tabla~\ref{tab:años_por_sala}, por lo cual la evidencia para cada modelo varía según la sala.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{llr @{\hspace{2em}} llr}
+\toprule
+\textbf{Serie} & \textbf{Años} & \textbf{Días} & \textbf{Serie} & \textbf{Años} & \textbf{Días} \\
+\midrule
+BA-v              & 2014--2020  & 1269 & BA-Pb          & 2022--2023  & 325 \\
+MACN-Ict Colección  & 2022--2025  & 710  & MACN-Pv General  & 2019        & 303 \\
+MACN-Or Antigua   & 2020--2021  & 693  & MACN-Pv Ameghino & 2019        & 269 \\
+MACN-Ict Laboratorio & 2022--2023 & 398  & MACN-He        & 2014 y 2016 & 194 \\
+MACN-Pv Anexo     & 2019--2020  & 366  & MACN-Ar        & 2016        & 78  \\
+MACN-Or Azara     & 2021        & 357  & MACN-In Arriba & 2025        & 52  \\
+MACN-Ma           & 2016 y 2020 & 332  & MACN-In Abajo  & 2025        & 52  \\
+\bottomrule
+\end{tabular}
+\caption{Años y cantidad de días con mediciones por sala.}
+\label{tab:años_por_sala}
+\end{table}
+
+Por otro lado, los datos del exterior fueron extraídos de los \href{https://www.smn.gob.ar/descarga-de-datos}{datos abiertos} del Servicio Meteorológico Nacional, estructurados en dos csv con datos del clima diario de cada estación meteorológica del país desde 1991 hasta el 2026. De estas mediciones tomamos aquellas pertenecientes al Observatorio Central de Buenos Aires (OCBA) que son a nivel de día, donde está presente el registro de la temperatura máxima, media, mínima y humedad relativa entre otros. 
+
+Finalmente, contamos con registros de capturas de coleópteros y lepidópteros en las salas MACN-Ba, MACN-En y MACN-Ma entre 2019 y 2020. Las trampas utilizadas, tanto aereas como terrestres, están basadas en feromonas. La cantidad de insectos atrapados fue anotada cada dos semanas con un cese en el periodo invernal (aproximadamente de julio a octubre/noviembre) debido a una menor aparición de los mismos.
 
 \subsection{Procesamiento y limpieza de datos}
-Se eliminaron los registros de bordes (primer y último día de muestreo de cada despliegue) por tratarse de días incompletos. Asimismo, se corrigió la identificación de dataloggers superpuestos en series complejas como Ornitología (diferenciando las colecciones Antigua y Azara)...
+Para tener un registro completo y estandarizado, se eliminaron las observaciones de los bordes, es decir, el primer y último día de muestreo de cada despliegue por estar incompletos. Asimismo, se corrigió la identificación de dataloggers superpuestos en series complejas como Ornitología (diferenciando las colecciones Antigua y Azara)...
 
 \subsection{Estrategia de modelado estadístico}
-Para modelar la temperatura máxima interior ($T_{\text{max, int}}$) se implementó un modelo de regresión lineal generalizada con errores correlacionados ($AR(1)$):
+Se decidió tomar como variables a predecir la temperatura máxima y mínima de la sala, elegida como el máximo y el mínimo respectivamente entre las observadas por tener una correspondencia directa con las mismas presentes en los datos del SMN. Para inferir ($T_{\text{max, int}}$) y ($T_{\text{min, int}}$) primero se implementaron modelos de regresión lineal generalizada de la siguiente forma:
 \begin{equation}
     T_{\text{max, int}}(t) = \beta_0 + \beta_1 \, \overline{T}_{\text{ext, } k}(t) + \gamma_1 \sin\left(\frac{2\pi t}{365{,}25}\right) + \gamma_2 \cos\left(\frac{2\pi t}{365{,}25}\right) + \varepsilon(t)
+    T_{\text{min, int}}(t) = \beta_0 + \beta_1 \, \overline{T}_{\text{min, } k}(t) + \gamma_1 \sin\left(\frac{2\pi t}{365{,}25}\right) + \gamma_2 \cos\left(\frac{2\pi t}{365{,}25}\right) + \varepsilon(t)
 \end{equation}
-donde $\overline{T}_{\text{ext, } k}$ representa el promedio móvil exterior de $k$ días y $\varepsilon(t) = \phi \, \varepsilon(t-1) + u(t)$ captura la fuerte autocorrelación serial intrínseca de los datos diarios.
+En estas ecuaciones $\overline{T}_{\text{ext, } k}$ y  representan el promedio móvil exterior de $k$ días y $\varepsilon(t) = \phi \, \varepsilon(t-1) + u(t)$ captura la fuerte autocorrelación serial intrínseca de los datos diarios ($AR(1)$).
 
 % ==============================================================================
 % 5. RESULTADOS
