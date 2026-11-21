@@ -1,18 +1,18 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.6.12)  11 NOV 2026 18:53
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.5) (preloaded format=pdflatex 2026.11.21)  21 NOV 2026 13:38
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**caratula.sty
-(./caratula.sty
-LaTeX2e <2025-11-01>
-L3 programming layer <2026-01-19>
+**./caratula.sty
+(caratula.sty
+LaTeX2e <2026-11-01>
+L3 programming layer <2026-09-09>
 
 LaTeX Warning: You have requested file `',
                but the file provides `caratula'.
 
 Package: caratula 2023/11/27 v0.5.1 Para componer caratulas de TPs del DC
-(/usr/local/texlive/2026/texmf-dist/tex/latex/base/ifthen.sty
-Package: ifthen 2024/03/16 v1.1e Standard LaTeX ifthen package (DPC)
+(C:\Users\W10\AppData\Local\Programs\MiKTeX\tex/latex/base\ifthen.sty
+Package: ifthen 2026-06-01 v1.1e Standard LaTeX ifthen package (DPC)
 )
 
 ! LaTeX Error: \usepackage before \documentclass.
@@ -29,14 +29,14 @@ between \documentclass and \begin{document}.
 Cargando package 'caratula' v0.5.1 (2023/11/27)
 \intlist=\toks17
 \intlistSinLU=\toks18
-\c@integrantesCount=\count275
+\c@integrantesCount=\count276
 \intTabNombre=\toks19
 \intTabLU=\toks20
 \intTabEmail=\toks21
-\c@directoresCount=\count276
+\c@directoresCount=\count277
 \direcTabNombre=\toks22
 \direcTabEmail=\toks23
-\c@coDirectoresCount=\count277
+\c@coDirectoresCount=\count278
 \codirecTabNombre=\toks24
 \codirecTabEmail=\toks25
 
@@ -87,17 +87,17 @@ LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <5> on input line 311.
 )
 ! Emergency stop.
-<*> caratula.sty
-                
+<*> ./caratula.sty
+                  
 *** (job aborted, no legal \end found)
 
  
 Here is how much of TeX's memory you used:
- 171 strings out of 467525
- 2420 string characters out of 5418982
- 433756 words of memory out of 5000000
- 29177 multiletter control sequences out of 15000+600000
- 627721 words of font info for 40 fonts, out of 8000000 for 9000
+ 174 strings out of 467309
+ 2554 string characters out of 5403764
+ 438371 words of memory out of 5000000
+ 29709 multiletter control sequences out of 15000+600000
+ 628489 words of font info for 40 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 27i,2n,37p,191b,74s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 27i,2n,37p,185b,74s stack positions out of 10000i,1000n,20000p,200000b,200000s
 !  ==> Fatal error occurred, no output PDF file produced!
