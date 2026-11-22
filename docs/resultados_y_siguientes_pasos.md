@@ -136,7 +136,10 @@ gls(temp_max ~ TMAX_l0 + TMAX_l1 + ... + TMAX_lK + sin_year + cos_year,
 | MACN-He | 0 a 9 | 7–10 | 0,27 (0,03) | 0,10 | −24 |
 | BA-Pb | 0 a 7 | 7–9 | 0,25 (0,03) | 0,09 | −74 |
 | MACN-In Abajo | 0 a 4 | 4–6 | 0,22 (0,04) | 0,13 | −8 |
-| MACN-Or | se saltea por las fechas repetidas | — | — | — | — |
+| MACN-Or Antigua | 0 a **14** (el máximo) | — | 0,44 (0,03) | 0,07 | −378 |
+| MACN-Or Azara | 0 a 10 | — | 0,36 (0,03) | 0,09 | −132 |
+
+MACN-Or se agregó el 22/11/2026: el 03 ahora separa los dos dataloggers (Antigua y Azara) como el 01 y el 05. Con BIC: Antigua 0 a 10 (0,36), Azara 0 a 7 (0,28). Las bullets de abajo se escribieron con 12 series; con Or, los pesos iguales se rechazan en 10 de 14.
 
 - **Los rezagos separados ajustan mejor que el promedio en todas las salas.** El test de razón de verosimilitud rechaza los pesos iguales (p < 0,05) en 8 de 12 series. Las excepciones son MACN-He, Pv Ameghino, Pv sin subsector e In Arriba, con p entre 0,07 y 0,10.
 - **El promedio de 3 días subestima el efecto en las salas aisladas:** el efecto acumulado es entre 2 y 4 veces la pendiente del promedio. Con ventanas de hasta 14 días, **la diferencia entre salas expuestas y aisladas está sobre todo en la velocidad, no en la magnitud**: las expuestas reciben 0,55–0,63 °C por °C exterior en 2 a 7 días, y varias aisladas reciben 0,39–0,50 en 10 a 13 días. Las que reciben menos (0,22–0,28: In, Pv sin subsector, He, BA-Pb) siguen siendo las más aisladas.
@@ -199,7 +202,7 @@ MACN-Ar (38 días evaluados) y MACN-In (12) quedan en la tabla del CSV pero no s
 2. **MACN-He podría juntar dos ubicaciones.** Los `.hobo` se llaman `Escalera_Emergencia` e `Interior`, y en invierno de 2014 la temperatura va de 16,5 a 22,7 °C, mientras que en 2016 va de 13,1 a 17,0 °C.
 3. **BA-v 2016–17 podría cambiar de datalogger el 10/01/2017.** En esa fecha cambia el intervalo, y hay dos `.hobo` del mismo período: `BA 10-01-2017 al 17-05-2017` y `BA interior compactos 10-01-17 al 17-05-17`.
 4. **MACN-Ict Colección une dos archivos separados por unos 11 meses** (02/2023 a 01/2024).
-5. **Hay `.hobo` que no tienen su `.txt`.** El caso más importante es `BA_11-12-2019 al 02-03-2020.hobo`: los datos de BA-v terminan el 27/12/2019, así que falta el período de la captura más grande (18/02/2020, 154 coleópteros en BA). Tampoco tienen `.txt`: BA interior compactos 2015–16, Ict laboratorio 2024–25, Pv 2013, Ma "tipos" y Or "armario".
+5. **Hay `.hobo` que no tienen su `.txt`.** El caso más importante es `BA_11-12-2019 al 02-03-2020.hobo`: los datos de BA-v terminan el 27/12/2019, así que falta el período de la captura más grande (18/02/2020, 154 coleópteros en BA). Tampoco tienen `.txt`: BA interior compactos 2015–16, Ict laboratorio 2024–25, Pv 2013, Ma "tipos" y Or "armario". *(Revisado el 22/11/2026: `BA_11-12-2019 al 02-03-2020.hobo` y `BA_11-12-2019-2.hobo` son el mismo archivo y no tienen lecturas de ese período. La conservadora no tomó mediciones entonces, así que el hueco de BA-v es real y no hay nada para exportar.)*
 6. **Nombres de archivo:**
    - En `No HOBO/` se llama `BA_v-10_12_14-9_05_2015.txt` y en `BA-v/` se llama `BA_v-10_12_2014-9_05_2015.txt`. El contenido es idéntico.
    - `MACN_Ar-abril-junio_2026.hobo` dice 2026 y los datos son de 2016.
@@ -277,7 +280,7 @@ Por el pico de la ACF a los 7 días, al modelo de rezagos (K del 03, AR(1)) se l
 1. Separar los dataloggers de MACN-Or y revisar las series que mezclan archivos (punto 2 de los problemas de la sección 2 y puntos 1 a 4 de la sección 4). Lo más robusto es que cada archivo sea su propia serie, salvo que se confirme que se trata del mismo datalogger. Hay que tener en cuenta el intervalo de muestreo de cada serie, o al menos indicarlo, cuando se comparan máximas diarias.
 2. Descartar los días incompletos: quedarse solo con los días que tienen todos los registros esperados. *(En `modelo_rezagos.R` ya se descartan el primer y el último día de cada archivo.)*
 3. Hacer que el script avise cuando una serie falla, en vez de descartarla. *(Hecho en `modelo_rezagos.R`.)*
-4. Exportar los `.hobo` que faltan, sobre todo el de BA-v de 12/2019 a 03/2020, y corregir `general_trampas.csv`.
+4. Corregir `general_trampas.csv`. *(El `.hobo` de BA-v de 12/2019 a 03/2020 no tiene datos de ese período: no hay nada para exportar.)*
 
 **Modelo**
 
