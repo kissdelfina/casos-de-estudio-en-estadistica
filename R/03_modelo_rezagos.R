@@ -205,6 +205,9 @@ ajustar_serie <- function(df_serie) {
   m_bic   <- modelos[[paste0("rezagos_0a", k_bic)]]
   nm_bic  <- nombres_rezagos(k_bic)
 
+  # ¿Hace falta el AR(1)? El mismo modelo sin correlación entre los errores
+  sin_ar1 <- gls(formula(mejor), data = df, method = "ML")
+
   # ¿Pesos iguales? prom3d está anidado en rezagos_0a2 (b0 = b1 = b2)
   p_pesos_iguales <- anova(modelos$prom3d, modelos$rezagos_0a2)$`p-value`[2]
 
@@ -224,7 +227,12 @@ ajustar_serie <- function(df_serie) {
     dAIC_vs_sin_ext   = AIC(mejor) - AIC(modelos$sin_exterior),
     p_pesos_iguales   = p_pesos_iguales,
     # Colinealidad entre la TMAX de hoy y la de ayer
-    cor_l0_l1         = cor(df$TMAX_l0, df$TMAX_l1)
+    cor_l0_l1         = cor(df$TMAX_l0, df$TMAX_l1),
+    # AR(1): phi estimado, cuánto empeora el AIC sin AR(1) (positivo = el AR(1)
+    # ajusta mejor) y EE del efecto acumulado si se ignora la autocorrelación
+    phi               = coef(mejor$modelStruct$corStruct, unconstrained = FALSE),
+    dAIC_sin_AR1      = AIC(sin_ar1) - AIC(mejor),
+    EE_acum_sin_AR1   = sqrt(sum(vcov(sin_ar1)[nm, nm]))
   )
 
   # Valores ajustados del mejor modelo (parte fija: rezagos + ciclo anual, sin
