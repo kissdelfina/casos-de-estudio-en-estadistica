@@ -8,9 +8,6 @@
 #
 # donde TMAX_lk es la máxima exterior de hace k días. Para cada serie:
 #   - se prueban K = 0, 1, ..., max_rezago y se elige el K con menor AIC;
-#     como prueba de robustez, también se informa el K con menor BIC, que
-#     castiga cada parámetro con log(n) en vez de 2 y elige ventanas iguales
-#     o más cortas;
 #   - se compara contra el modelo del promedio de 3 días y contra un modelo
 #     sin exterior (para medir el aporte real del exterior);
 #   - se testea si los pesos iguales del promedio son razonables: el promedio
@@ -175,7 +172,6 @@ ajustar_serie <- function(df_serie) {
     Etiqueta = etiqueta,
     Modelo   = names(modelos),
     AIC      = map_dbl(modelos, AIC),
-    BIC      = map_dbl(modelos, BIC),
     phi      = map_dbl(modelos, ~ coef(.x$modelStruct$corStruct, unconstrained = FALSE))
   )
 
@@ -200,11 +196,6 @@ ajustar_serie <- function(df_serie) {
   efecto_acum <- sum(b[nm])
   ee_acum     <- sqrt(sum(V[nm, nm]))
 
-  # Mejor cantidad de rezagos según BIC, y su efecto acumulado
-  k_bic   <- as.integer(sub("rezagos_0a", "", aic_rez$Modelo[which.min(aic_rez$BIC)]))
-  m_bic   <- modelos[[paste0("rezagos_0a", k_bic)]]
-  nm_bic  <- nombres_rezagos(k_bic)
-
   # ¿Hace falta el AR(1)? El mismo modelo sin correlación entre los errores
   sin_ar1 <- gls(formula(mejor), data = df, method = "ML")
 
@@ -217,9 +208,6 @@ ajustar_serie <- function(df_serie) {
     Rezagos_mejor     = paste0("0 a ", k_mejor),
     Efecto_acumulado  = efecto_acum,
     EE_acumulado      = ee_acum,
-    Rezagos_BIC       = paste0("0 a ", k_bic),
-    Efecto_acum_BIC   = sum(coef(m_bic)[nm_bic]),
-    EE_acum_BIC       = sqrt(sum(vcov(m_bic)[nm_bic, nm_bic])),
     Pendiente_prom3d  = unname(coef(modelos$prom3d)["TMAX_prom3d"]),
     # Negativo = los rezagos separados ajustan mejor que el promedio de 3 días
     dAIC_vs_prom3d    = AIC(mejor) - AIC(modelos$prom3d),

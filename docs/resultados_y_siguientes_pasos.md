@@ -139,36 +139,19 @@ gls(temp_max ~ TMAX_l0 + TMAX_l1 + ... + TMAX_lK + sin_year + cos_year,
 | MACN-Or Antigua | 0 a **14** (el máximo) | — | 0,44 (0,03) | 0,07 | −378 |
 | MACN-Or Azara | 0 a 10 | — | 0,36 (0,03) | 0,09 | −132 |
 
-MACN-Or se agregó el 22/11/2026: el 03 ahora separa los dos dataloggers (Antigua y Azara) como el 01 y el 05. Con BIC: Antigua 0 a 10 (0,36), Azara 0 a 7 (0,28). Las bullets de abajo se escribieron con 12 series; con Or, los pesos iguales se rechazan en 10 de 14.
+MACN-Or se agregó el 22/11/2026: el 03 ahora separa los dos dataloggers (Antigua y Azara) como el 01 y el 05. Las bullets de abajo se escribieron con 12 series; con Or, los pesos iguales se rechazan en 10 de 14.
 
 - **Los rezagos separados ajustan mejor que el promedio en todas las salas.** El test de razón de verosimilitud rechaza los pesos iguales (p < 0,05) en 8 de 12 series. Las excepciones son MACN-He, Pv Ameghino, Pv sin subsector e In Arriba, con p entre 0,07 y 0,10.
 - **El promedio de 3 días subestima el efecto en las salas aisladas:** el efecto acumulado es entre 2 y 4 veces la pendiente del promedio. Con ventanas de hasta 14 días, **la diferencia entre salas expuestas y aisladas está sobre todo en la velocidad, no en la magnitud**: las expuestas reciben 0,55–0,63 °C por °C exterior en 2 a 7 días, y varias aisladas reciben 0,39–0,50 en 10 a 13 días. Las que reciben menos (0,22–0,28: In, Pv sin subsector, He, BA-Pb) siguen siendo las más aisladas.
 - **Las salas responden con perfiles distintos.** En las expuestas (MACN-Ar, Pv Anexo) casi todo el efecto (86–93 %) llega el mismo día y el siguiente. BA-v también tiene su mayor peso el mismo día, pero el efecto sigue hasta 7 días después. En las aisladas, solo el 24–42 % llega en los dos primeros días, y el resto se reparte a lo largo de una a dos semanas.
 - **Ventanas ambiguas:** en MACN-Ma (7–11) y MACN-He (7–10), el AIC es casi plano en un rango amplio, así que la duración exacta de la inercia es incierta. En Pv Ameghino, en cambio, cualquier ventana de menos de 13 días ajusta claramente peor.
 - El efecto acumulado es condicional al ciclo anual: mide la respuesta a días más calurosos o más fríos de lo normal para la época, no todo el vínculo entre interior y exterior.
-- Tablas completas en `resultados/tablas/rezagos_resumen.csv`, `rezagos_coeficientes.csv` y `rezagos_aic.csv` (AIC y BIC de cada ventana).
+- Tablas completas en `resultados/tablas/rezagos_resumen.csv`, `rezagos_coeficientes.csv` y `rezagos_aic.csv` (AIC de cada ventana).
 
-**Robustez con BIC.** El BIC castiga cada día agregado con log(n) (de 4 a 7 según la serie) en vez de 2, así que elige ventanas iguales o más cortas:
+**Ventanas largas.**
 
-| Serie | Ventana AIC → BIC | Efecto acumulado AIC → BIC |
-|---|---|---|
-| BA-v | 7 → 6 | 0,63 → 0,61 |
-| MACN-Ar | 2 → 1 | 0,60 → 0,51 |
-| MACN-Pv Anexo | 2 → 2 | 0,55 → 0,55 |
-| MACN-Pv Ameghino | 13 → **6** | 0,50 → **0,29** |
-| MACN-Ict Laboratorio | 11 → **6** | 0,50 → **0,38** |
-| MACN-Ma | 10 → 6 | 0,47 → 0,38 |
-| MACN-Ict Colección | 10 → 7 | 0,39 → 0,31 |
-| MACN-In Arriba | 5 → 4 | 0,28 → 0,24 |
-| MACN-Pv (sin subsector) | 5 → 5 | 0,27 → 0,27 |
-| MACN-He | 9 → 5 | 0,27 → 0,18 |
-| BA-Pb | 7 → 6 | 0,25 → 0,22 |
-| MACN-In Abajo | 4 → 4 | 0,22 → 0,22 |
-
-- **Se mantiene con los dos criterios:** las salas rápidas (Pv Anexo, Ar) usan 1–2 días y las aisladas, 5–7 o más. La diferencia de velocidad no depende del criterio.
-- **Depende del criterio:** la cola larga de las salas aisladas (los días 7 a 13). Cada uno de esos días aporta un coeficiente chico que el BIC no considera suficiente, pero juntos suman entre 0,1 y 0,2 °C/°C. Por eso el efecto acumulado de las aisladas queda en un rango: Ameghino entre 0,29 y 0,50, Ict Laboratorio entre 0,38 y 0,50. La afirmación "las aisladas reciben casi tanto como las expuestas, pero más lento" vale con AIC y no con BIC.
 - **Evidencia fuera de la muestra a favor de las ventanas largas:** al pasar el pronóstico de un máximo de 7 a 14 días, las series que eligieron ventanas más largas pronosticaron mejor en 8 de 10 casos (por ejemplo, Ameghino sin la TMAX de hoy: RMSE de 0,89 a 0,68 °C; Or Antigua con hoy: de 0,60 a 0,51). La cola larga ayuda a predecir días nuevos, que es lo que el AIC intenta optimizar.
-- Un modelo con forma impuesta para los rezagos (por ejemplo, decaimiento geométrico, con la máxima interior de ayer como predictora) estimaría la cola con un solo parámetro y evitaría tener que elegir entre AIC y BIC.
+- Un modelo con forma impuesta para los rezagos (por ejemplo, decaimiento geométrico, con la máxima interior de ayer como predictora) estimaría la cola con un solo parámetro.
 
 ### Pronóstico con y sin la TMAX de hoy: `R/05_modelo_pronostico.R`
 
@@ -247,23 +230,23 @@ Con la ventana elegida en el 03, cada serie se ajusta con tres estructuras de er
 
 Por el pico de la ACF a los 7 días, al modelo de rezagos (K del 03, AR(1)) se le agrega el día de la semana de dos formas: una indicadora de día hábil (lunes a viernes) o un factor de 7 niveles con el domingo como referencia. Los feriados todavía cuentan como días hábiles.
 
-| Serie | Hábil − fin de semana (°C, EE) | ΔAIC hábil | ΔBIC hábil | ΔAIC factor | ACF a 7 días: sin días → con hábil |
-|---|---|---|---|---|---|
-| MACN-Ar | **+1,08** (0,20) | −25,5 | −23,1 | −23,5 | 0,42 → 0,17 |
-| MACN-Pv Ameghino | **+0,22** (0,04) | −33,7 | −30,1 | −35,2 | −0,03 → −0,17 |
-| MACN-Ict Colección | **+0,13** (0,02) | −31,8 | −27,2 | −28,8 | 0,17 → 0,13 |
-| MACN-In Arriba | +0,15 (0,06) | −5,0 | −3,0 | −1,7 | 0,06 → −0,02 |
-| MACN-Pv (sin subsector) | +0,12 (0,05) | −4,1 | −0,3 | −0,9 | 0,05 → 0,03 |
-| MACN-In Abajo | +0,13 (0,06) | −3,3 | −1,4 | −0,3 | 0,10 → 0,04 |
-| BA-Pb | +0,05 (0,03) | −1,8 | +2,0 | −0,9 | 0,06 → 0,05 |
-| MACN-He | +0,04 (0,04) | +0,8 | +4,1 | −0,2 | 0,00 → −0,01 |
-| MACN-Pv Anexo | +0,08 (0,10) | +1,4 | +5,3 | +8,4 | −0,02 → −0,02 |
-| MACN-Ict Laboratorio | +0,02 (0,03) | +1,6 | +5,6 | +0,9 | −0,01 → −0,01 |
-| MACN-Ma | +0,01 (0,03) | +1,9 | +5,7 | +4,2 | 0,02 → 0,02 |
-| BA-v | 0,00 (0,02) | +2,0 | +7,1 | +5,6 | 0,11 → 0,11 |
+| Serie | Hábil − fin de semana (°C, EE) | ΔAIC hábil | ΔAIC factor | ACF a 7 días: sin días → con hábil |
+|---|---|---|---|---|
+| MACN-Ar | **+1,08** (0,20) | −25,5 | −23,5 | 0,42 → 0,17 |
+| MACN-Pv Ameghino | **+0,22** (0,04) | −33,7 | −35,2 | −0,03 → −0,17 |
+| MACN-Ict Colección | **+0,13** (0,02) | −31,8 | −28,8 | 0,17 → 0,13 |
+| MACN-In Arriba | +0,15 (0,06) | −5,0 | −1,7 | 0,06 → −0,02 |
+| MACN-Pv (sin subsector) | +0,12 (0,05) | −4,1 | −0,9 | 0,05 → 0,03 |
+| MACN-In Abajo | +0,13 (0,06) | −3,3 | −0,3 | 0,10 → 0,04 |
+| BA-Pb | +0,05 (0,03) | −1,8 | −0,9 | 0,06 → 0,05 |
+| MACN-He | +0,04 (0,04) | +0,8 | −0,2 | 0,00 → −0,01 |
+| MACN-Pv Anexo | +0,08 (0,10) | +1,4 | +8,4 | −0,02 → −0,02 |
+| MACN-Ict Laboratorio | +0,02 (0,03) | +1,6 | +0,9 | −0,01 → −0,01 |
+| MACN-Ma | +0,01 (0,03) | +1,9 | +4,2 | 0,02 → 0,02 |
+| BA-v | 0,00 (0,02) | +2,0 | +5,6 | 0,11 → 0,11 |
 
-- **Hay un efecto claro de los días hábiles en tres salas**, con AIC y con BIC: MACN-Ar (+1,1 °C), Pv Ameghino (+0,2 °C) e Ict Colección (+0,1 °C). En MACN-In y Pv sin subsector es chico y dudoso. En el resto no aparece.
-- **Alcanza con la indicadora de día hábil.** El factor de 7 días solo mejora algo el AIC en Ameghino, y el BIC siempre prefiere la indicadora. El factor muestra, eso sí, que en varias salas el calor se acumula a lo largo de la semana: en Ameghino pasa de +0,21 °C el lunes a +0,36 °C el viernes, y el sábado queda en un valor intermedio (+0,14 °C).
+- **Hay un efecto claro de los días hábiles en tres salas**: MACN-Ar (+1,1 °C), Pv Ameghino (+0,2 °C) e Ict Colección (+0,1 °C). En MACN-In y Pv sin subsector es chico y dudoso. En el resto no aparece.
+- **Alcanza con la indicadora de día hábil.** El factor de 7 días solo mejora algo el AIC en Ameghino. El factor muestra, eso sí, que en varias salas el calor se acumula a lo largo de la semana: en Ameghino pasa de +0,21 °C el lunes a +0,36 °C el viernes, y el sábado queda en un valor intermedio (+0,14 °C).
 - **No cambia el efecto de la TMAX exterior:** el efecto acumulado se mueve menos de 0,05 en todas las series, porque el día de la semana no está correlacionado con el clima.
 - **El efecto cambia a lo largo del año** (diferencia media de los residuos entre días hábiles y fines de semana, por mes):
   - MACN-Ar: 0,3 °C en abril, 1,2 °C en mayo y 2,3 °C en junio de 2016. Crece con el frío, lo que sugiere **calefacción en días hábiles**.
@@ -296,7 +279,7 @@ Por el pico de la ACF a los 7 días, al modelo de rezagos (K del 03, AR(1)) se l
 8. **Comparar salas medidas en el mismo período**, para no confundir sala con año: 2019 (los 3 registros de MACN-Pv y BA-v), 2020 (MACN-Ma, MACN-Or y BA-v) y 2022–2023 (MACN-Ict colección y laboratorio, y BA-Pb).
 9. **Otras respuestas:** temperatura media y mínima, amplitud diaria y, sobre todo, la **humedad relativa interior** contra la humedad exterior, que es la variable clave para la conservación.
 10. **Residuos:** *(Hecho en `R/06_diagnostico_residuos.R`: ARMA(1,1) ajusta mejor en la mayoría, pero los resultados no cambian.)* *(Día de la semana: hecho en `R/07_dia_semana.R`.)* Faltan los feriados y una interacción entre día hábil y estación, para medir si la climatización calienta en invierno y enfría en verano. Lo ideal es preguntarle al museo cuándo se usa la climatización de cada sala.
-11. **Robustez de la ventana con BIC.** *(Hecho en `R/03_modelo_rezagos.R`: la velocidad se mantiene, pero la cola larga de las aisladas depende del criterio. Ver la sección 3.)* El siguiente paso es un modelo con forma impuesta para los rezagos.
+11. **Forma de los rezagos.** Un modelo con forma impuesta (por ejemplo, decaimiento geométrico) estimaría la cola larga de las salas aisladas con un solo parámetro.
 
 **Trampas**
 

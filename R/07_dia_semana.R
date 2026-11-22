@@ -13,7 +13,7 @@
 #   habil     ... + habil        (1 de lunes a viernes, 0 sábado y domingo)
 #   dia       ... + dia          (factor de 7 niveles, referencia: domingo)
 #
-# Se informa el ΔAIC y el ΔBIC contra el modelo sin días, cuántos °C más tiene
+# Se informa el ΔAIC contra el modelo sin días, cuántos °C más tiene
 # la sala en un día hábil, el coeficiente de cada día respecto del domingo, si
 # cambia el efecto acumulado de la TMAX exterior y si baja la autocorrelación
 # de los residuos a los 7 días.
@@ -153,14 +153,13 @@ analizar_serie <- function(df_serie) {
 
   nm <- nombres_rezagos(k)
   comparacion <- imap_dfr(modelos, function(m, nombre) {
-    tibble(Etiqueta = etiqueta, Modelo = nombre, AIC = AIC(m), BIC = BIC(m),
+    tibble(Etiqueta = etiqueta, Modelo = nombre, AIC = AIC(m),
            Efecto_acum = sum(coef(m)[nm]),
            EE_acum = sqrt(sum(vcov(m)[nm, nm])),
            phi = coef(m$modelStruct$corStruct, unconstrained = FALSE),
            ACF_7 = acf_7(m, df$t))
   }) %>%
-    mutate(dAIC = AIC - AIC[Modelo == "sin_dias"],
-           dBIC = BIC - BIC[Modelo == "sin_dias"])
+    mutate(dAIC = AIC - AIC[Modelo == "sin_dias"])
 
   m_h <- modelos$habil
   efecto_habil <- tibble(
@@ -194,15 +193,15 @@ efecto_habil <- map_dfr(resultados, "efecto_habil")
 coefs_dia    <- map_dfr(resultados, "coefs_dia")
 
 resumen <- efecto_habil %>%
-  left_join(comparacion %>% select(Etiqueta, Modelo, dAIC, dBIC, Efecto_acum, ACF_7) %>%
-              pivot_wider(names_from = Modelo, values_from = c(dAIC, dBIC, Efecto_acum, ACF_7)),
+  left_join(comparacion %>% select(Etiqueta, Modelo, dAIC, Efecto_acum, ACF_7) %>%
+              pivot_wider(names_from = Modelo, values_from = c(dAIC, Efecto_acum, ACF_7)),
             by = "Etiqueta") %>%
   select(Etiqueta, N_dias, K, Habil, EE_habil, p_dia,
-         dAIC_habil, dAIC_dia, dBIC_habil, dBIC_dia,
+         dAIC_habil, dAIC_dia,
          Efecto_acum_sin_dias, Efecto_acum_dia, ACF_7_sin_dias, ACF_7_dia) %>%
   arrange(dAIC_dia)
 
-cat("\n=== DÍA DE LA SEMANA (ΔAIC y ΔBIC contra el modelo sin días; negativo = mejora) ===\n")
+cat("\n=== DÍA DE LA SEMANA (ΔAIC contra el modelo sin días; negativo = mejora) ===\n")
 print(resumen %>% mutate(across(where(is.double), ~ round(.x, 3))), n = Inf, width = Inf)
 
 cat("\n=== COEFICIENTE DE CADA DÍA RESPECTO DEL DOMINGO (°C) ===\n")
