@@ -210,5 +210,5 @@ g_pv <- ggplot(pred_pv, aes(x = Date, group = Subsector, color = Subsector)) +
 print(g_pv)
 
 # Guardar figura para el informe
-ggsave("resultados/figuras/fig_modelo_pv.png", g_pv, width = 8, height = 4.5, dpi = 300)
+# fig_modelo_pv.png ahora la genera 03_modelo_rezagos.R con el modelo de rezagos
 ggsave("resultados/figuras/fig_modelo_todas_salas.png", g_general, width = 10, height = 7, dpi = 300)

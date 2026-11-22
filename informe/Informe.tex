@@ -86,9 +86,9 @@
 
 \textbf{Contexto y Problema:} La conservación preventiva de colecciones de material orgánico históricas depende críticamente de la estabilidad microclimática en las salas de guarda. Variaciones bruscas de temperatura o niveles elevados de humedad relativa pueden provocar fatiga estructural en los ejemplares o favorecer la proliferación de insectos perjudiciales como los son los coleópteros y lepidópteros. En este trabajo se analiza el grado de acoplamiento térmico entre las condiciones meteorológicas exteriores registradas por el Servicio Meteorológico Nacional (SMN) y el microclima interno de diversas salas del Museo Argentino de Ciencias Naturales (MACN) y colecciones asociadas, evaluando asimismo la relación con las capturas de insectos en trampas de monitoreo.
 
-\textbf{Metodología:} Se procesaron registros continuos de temperatura y humedad capturados por un conjunto reducido de sensores HOBO. Estos fueron colocados, generalmente a lo largo de todo un año, en alguno de los catorce sectores o salas del museo, exceptuando ciertas ocaciones donde se ubicaron dos en la misma sala con fines particulares. Para evitar inferencias espurias debidas a la fuerte autocorrelación temporal, se ajustaron modelos de mínimos cuadrados generalizados (GLS) con estructura autorregresiva de primer orden ($AR(1)$) y armónicos anuales. La inercia térmica de cada espacio se determinó mediante la comparación de ventanas de promedio móvil exterior. Paralelamente, se exploraron las tasas de captura de insectos mediante modelos para datos de conteo con offset temporal para estandarizar los intervalos de exposición.
+\textbf{Metodología:} Se analizaron los registros de temperatura de 14 dataloggers HOBO ubicados en 9 salas o colecciones, medidos en distintos períodos entre 2014 y 2025 (entre 52 y 1269 días por serie). En algunas salas hubo dos o tres dataloggers en sectores distintos, y cada uno se analizó como una serie propia. La temperatura máxima diaria de cada serie se modeló en función de la máxima exterior del mismo día y de hasta 14 días anteriores, con cada día como predictora separada (modelo de rezagos distribuidos), más un ciclo anual. Por la fuerte autocorrelación entre días consecutivos, los modelos se ajustaron por mínimos cuadrados generalizados (GLS) con errores autorregresivos de primer orden ($AR(1)$). La cantidad de días de rezago de cada sala se eligió por AIC, y se usó el BIC como control de robustez. Además, se evaluó fuera de la muestra la capacidad de pronosticar la temperatura interior sin conocer la exterior del mismo día. Por otro lado, se modelaron las capturas de insectos en trampas con modelos para datos de conteo, con un offset por la duración de cada período de exposición.
 
-\textbf{Principales Hallazgos:} Los resultados revelan dos regímenes térmicos bien diferenciados dentro del museo: (1) \textit{Salas permeables o expuestas} (e.g., Paleovertebrados Anexo y Arácnidos), caracterizadas por una rápida respuesta al exterior (inercia de 2 días), pendientes elevadas ($\beta \approx 0{,}50 - 0{,}62\,^\circ\text{C}_\text{int}/^\circ\text{C}_\text{ext}$) y una marcada amplitud térmica diaria; y (2) \textit{Salas aisladas o con alta inercia} (e.g., Ictiología Colección, Ornitología y Paleovertebrados Ameghino), que presentan una inercia de 4 a 7 días, menor transmisión de calor ($\beta \approx 0{,}07 - 0{,}17$) y una memoria propia dominante ($\phi > 0{,}90$). En cuanto al riesgo biológico, la tasa diaria de capturas de plagas exhibe una fuerte estacionalidad asociada a la temperatura ($p = 0{,}017$), observándose un incremento de la actividad en los meses estivales.
+\textbf{Principales Hallazgos:} En todas las salas la temperatura exterior influye sobre la interior, pero las salas difieren sobre todo en la velocidad con que les llega. En las \textit{salas expuestas} (Paleovertebrados Anexo, Arácnidos y BA-v), la máxima interior sube entre 0{,}55 y 0{,}63\,$^\circ$C por cada $^\circ$C de aumento sostenido de la máxima exterior, y en Anexo y Arácnidos casi todo el efecto llega el mismo día y el siguiente. En las \textit{salas aisladas}, solo una parte menor llega en los dos primeros días y el resto sigue llegando durante una a dos semanas. Algunas, como Paleovertebrados Ameghino, Ictiología Laboratorio, Mastozoología y Ornitología, acumulan finalmente un efecto cercano al de las expuestas (entre 0{,}36 y 0{,}50 según el AIC, algo menos con el BIC, que es más conservador), mientras que otras, como Invertebrados, Herpetología y BA-Pb, reciben menos (0{,}22 a 0{,}28). El modelo habitual con el promedio de los últimos 3 días subestima el efecto en las salas aisladas, porque corta la respuesta antes de que termine de llegar. Con la temperatura exterior de los días anteriores se puede pronosticar la máxima interior con un error típico de entre 0{,}5 y 1{,}6\,$^\circ$C, y conocer la del mismo día solo mejora mucho el pronóstico en las salas expuestas. En cuanto al riesgo biológico, la tasa diaria de capturas de insectos aumenta con la temperatura exterior: según un modelo binomial negativo, que tiene en cuenta la fuerte sobredispersión de los conteos, aumenta un 23\,\% por cada $^\circ$C (IC 95\,\%: 12\,\% a 36\,\%), con mayor actividad en los meses cálidos.
 
 \textbf{Implicancias:} Los hallazgos permiten identificar qué sectores requieren intervención prioritaria en aislamiento pasivo o acondicionamiento climático activo, y justifican el establecimiento de calendarios de monitoreo y control de plagas intensificados al comienzo de la temporada estival.
 
@@ -148,40 +148,58 @@ Para tener un registro completo y estandarizado, se eliminaron las observaciones
 \subsubsection{Caso de la temperatura}
 Se decidió tomar como variables a predecir la temperatura máxima y mínima de la sala, elegida como el máximo y el mínimo respectivamente entre las observadas por tener una correspondencia directa con las mismas presentes en los datos del SMN. Para inferir ($T_{\text{max, int}}$) y ($T_{\text{min, int}}$) primero se implementaron modelos de regresión lineal generalizada de la siguiente forma:
 \begin{equation}
-    T_{\text{max, int}}(t) = \beta_0 + \beta_1 \, \overline{T}_{\text{max, ext } k}(t) + \gamma_1 \sin\left(\frac{2\pi t}{365{,}25}\right) + \gamma_2 \cos\left(\frac{2\pi t}{365{,}25}\right) + \varepsilon(t) 
-    \\
+    T_{\text{max, int}}(t) = \beta_0 + \beta_1 \, \overline{T}_{\text{max, ext } k}(t) + \gamma_1 \sin\left(\frac{2\pi\, d(t)}{365{,}25}\right) + \gamma_2 \cos\left(\frac{2\pi\, d(t)}{365{,}25}\right) + \varepsilon(t)
 \end{equation}
 \begin{equation}
-    T_{\text{min, int}}(t) = \beta_0 + \beta_1 \, \overline{T}_{\text{min, ext } k}(t) + \gamma_1 \sin\left(\frac{2\pi t}{365{,}25}\right) + \gamma_2 \cos\left(\frac{2\pi t}{365{,}25}\right) + \varepsilon(t)
+    T_{\text{min, int}}(t) = \beta_0 + \beta_1 \, \overline{T}_{\text{min, ext } k}(t) + \gamma_1 \sin\left(\frac{2\pi\, d(t)}{365{,}25}\right) + \gamma_2 \cos\left(\frac{2\pi\, d(t)}{365{,}25}\right) + \varepsilon(t)
 \end{equation}
-En estas ecuaciones $\overline{T}_{\text{ext, } k}$ y  representan el promedio móvil exterior de $k$ días y $\varepsilon(t) = \phi \, \varepsilon(t-1) + u(t)$ captura la fuerte autocorrelación serial intrínseca de los datos diarios ($AR(1)$). Este intenta resumir la información de temperatura durante el mísmo día y los $k-1$ previos al que se busca predecir. La importancia de tener información pasada es por el efecto aislante que puede tener la infraestructura del museo, es decir, los materiales de muros, ventanas y puertas sumado a condiciones propias de los ambientes pueden hacer que los efectos climáticos lleguen con retraso. Asimismo, las funciones sinusoidales del tiempo buscan representar el efecto de la estación, pues mapean los 365.25 días del año al intervalo $[-1,1]$ lo cual permite conectar el día 1 con el 365.
+En estas ecuaciones $\overline{T}_{\text{max, ext } k}$ y $\overline{T}_{\text{min, ext } k}$ representan el promedio móvil exterior de $k$ días y $\varepsilon(t) = \phi \, \varepsilon(t-1) + u(t)$ captura la fuerte autocorrelación serial intrínseca de los datos diarios ($AR(1)$). Este intenta resumir la información de temperatura durante el mísmo día y los $k-1$ previos al que se busca predecir. La importancia de tener información pasada es por el efecto aislante que puede tener la infraestructura del museo, es decir, los materiales de muros, ventanas y puertas sumado a condiciones propias de los ambientes pueden hacer que los efectos climáticos lleguen con retraso. Asimismo, las funciones sinusoidales buscan representar el efecto de la estación: $d(t)$ es el día del año de la fecha $t$ (de 1 a 366), y el seno y el coseno lo llevan a una curva periódica que une el día 365 con el 1.
 
-Posteriormente se implementó un modelo rezagado, generalmente usado en series de tiempo, conocido como modelo de rezagos distribuidos que no solo contiene la correlación de los errores por ser días consecutivos si no también incorpora como variables predictoras a los k-1 días previos al evento como se ve en las ecuaciones~\ref{eq:ecuacion_rezagados_max} y ~\ref{eq:ecuacion_rezagados_min}.
+Posteriormente se implementó un modelo rezagado, generalmente usado en series de tiempo, conocido como modelo de rezagos distribuidos que no solo contiene la correlación de los errores por ser días consecutivos sino que también incorpora como predictoras separadas la temperatura exterior del mismo día y la de cada uno de los $K$ días previos, como se ve en las ecuaciones~\ref{eq:ecuacion_rezagados_max} y~\ref{eq:ecuacion_rezagados_min}.
 
 \begin{equation}
-T_{\text{max, int}}(t) = \beta_0 + \, \sum_{i=t-k}^{t}\beta_iT_{\text{max, ext, } i} + \gamma_1 \sin\left(\frac{2\pi t}{365{,}25}\right) + \gamma_2 \cos\left(\frac{2\pi t}{365{,}25}\right) + \varepsilon(t)
+T_{\text{max, int}}(t) = \beta_0 + \sum_{j=0}^{K} \beta_{j+1}\, T_{\text{max, ext}}(t-j) + \gamma_1 \sin\left(\frac{2\pi\, d(t)}{365{,}25}\right) + \gamma_2 \cos\left(\frac{2\pi\, d(t)}{365{,}25}\right) + \varepsilon(t)
 \label{eq:ecuacion_rezagados_max}
 \end{equation}
-\\
 \begin{equation}
-T_{\text{min, int}}(t) = \beta_0 + \, \sum_{i=t-k}^{t}\beta_iT_{\text{min, ext, } i} + \gamma_1 \sin\left(\frac{2\pi t}{365{,}25}\right) + \gamma_2 \cos\left(\frac{2\pi t}{365{,}25}\right) + \varepsilon(t)
+T_{\text{min, int}}(t) = \beta_0 + \sum_{j=0}^{K} \beta_{j+1}\, T_{\text{min, ext}}(t-j) + \gamma_1 \sin\left(\frac{2\pi\, d(t)}{365{,}25}\right) + \gamma_2 \cos\left(\frac{2\pi\, d(t)}{365{,}25}\right) + \varepsilon(t)
 \label{eq:ecuacion_rezagados_min}
 \end{equation}
 
-Se puede apreciar como el modelo de promedio es un caso particular de este, donde los coeficientes de los días son iguales y se encuentran divididos por k, por lo que este modelo a pesar de tener más complejidad tiene mayor capacidad expresiva. Se experimentó con k para encontrar la cantidad de días necesarios para tener la mejor explicación de la temperatura interna en cada una de las salas.
+Aquí $\beta_0$ es la ordenada al origen y $\beta_{j+1}$ es el efecto de la temperatura exterior de hace $j$ días: $\beta_1$ corresponde al mismo día, $\beta_2$ al día anterior, y así hasta $\beta_{K+1}$, que corresponde a $K$ días atrás. Los coeficientes son los mismos para todos los días de la serie, y $\varepsilon(t)$ sigue el mismo proceso $AR(1)$ que en el modelo anterior.
 
-Por último, se tomaron las ecuaciones~\ref{eq:ecuacion_rezagados_max} y ~\ref{eq:ecuacion_rezagados_min} y se suprimió el uso de la variable predictora que corresponde al mismo día $t$. Esta decisión se tomo con dos objetivos: primero, observar que tan importante es el efecto directo de la temperatura exterior y, segundo, ver que la factibilidad de predecir la temperatura interior el día $t$ a partir de la exterior en los $k-1$ días anteriores. La evaluación llevada a cabo fue por una ventana deslizante, es decir, se entrena al modelo con $p$ días y se ve que tan bien predice el día $p+1$, consiguiendo una evaluación de desempeño moviendo el p por una unidad. 
+El modelo del promedio de $k$ días es un caso particular de este, con $K = k-1$ y todos los coeficientes iguales ($\beta_1 = \dots = \beta_k = \beta/k$). El modelo de rezagos tiene más parámetros, pero permite que cada día pese distinto y que el efecto se extienda más allá de unos pocos días. Para cada serie se probaron ventanas de $K = 0$ a $14$ días.
 
-\subsubsection{Caso de predicción de plagas}
-Para estudiar la aparición de coleópteros y lepidópteros propusimos un modelo lineal generalizado poisson. Esta elección es sirve como base para cualquier problema de conteo (es decir, predicción de un número entero positivo de eventos en el tiempo) y usamos una ecuación de la forma:
-
+Como la temperatura exterior de días consecutivos está muy correlacionada ($r \approx 0{,}85$), cada coeficiente por separado se estima con mucha incertidumbre. Por eso, en lugar de interpretar cada uno, se informa el \textit{efecto acumulado}
 \begin{equation}
-Y \sim Poisson(\lambda) \\
+\theta = \sum_{j=1}^{K+1} \beta_j, \qquad \widehat{\mathrm{EE}}(\hat\theta) = \sqrt{\mathbf{1}^\top \hat V \mathbf{1}},
+\label{eq:efecto_acumulado}
 \end{equation}
+donde $\hat V$ es la matriz de covarianzas estimada de $(\hat\beta_1, \dots, \hat\beta_{K+1})$. El efecto acumulado indica cuántos $^\circ$C sube la máxima interior si la máxima exterior sube 1\,$^\circ$C y se mantiene así durante $K+1$ días seguidos. Su error estándar es mucho menor que el de cada coeficiente, porque las covarianzas negativas entre coeficientes vecinos se compensan.
+
+\subsubsection{Evaluación del pronóstico}
+Por último, se evaluó si el modelo sirve para pronosticar la máxima interior de un día antes de que ocurra. En la práctica, a la mañana todavía no se conoce la máxima exterior de ese día, así que el modelo de la ecuación~\ref{eq:ecuacion_rezagados_max} no puede usarse tal cual para pronosticar. Por eso se compararon tres modelos para cada serie, todos con errores $AR(1)$:
+\begin{itemize}
+    \item \textbf{Con el día actual:} el modelo de rezagos completo (rezagos $0$ a $K$). Usa información que no estaría disponible, así que funciona como el mejor caso posible.
+    \item \textbf{Sin el día actual:} el mismo modelo, pero solo con los rezagos $1$ a $K$, es decir, con la máxima exterior de ayer hacia atrás. Es el pronóstico que se podría hacer en la práctica.
+    \item \textbf{Sin exterior:} solo el ciclo anual (seno y coseno). Sirve de referencia para medir cuánto aporta la información del exterior.
+\end{itemize}
+
+La evaluación se hizo fuera de la muestra, con \textit{origen móvil}. Se entrena cada modelo con la primera mitad de la serie (como mínimo 40 días), se pronostican los 30 días siguientes, esos días se suman al entrenamiento, se vuelve a ajustar y se repite hasta el final de la serie. Así, cada día se pronostica con un modelo que no vio ese día ni los posteriores. Como el pronóstico usa solo la parte fija del modelo (la temperatura exterior y la época del año), pronosticar un bloque de 30 días equivale a pronosticar día por día con coeficientes que se actualizan una vez por mes. La ventana $K$ se elige por AIC por separado para el modelo con el día actual y para el modelo sin él, y solo con el primer período de entrenamiento, para que la elección no use información del período que se pronostica.
+
+El desempeño se midió con la raíz del error cuadrático medio (RMSE, en $^\circ$C) de los pronósticos. A partir de él se calculó cuánto empeora el pronóstico al no conocer la máxima exterior del día actual, $100\,(\text{RMSE}_{\text{sin día actual}}/\text{RMSE}_{\text{con día actual}} - 1)$, y cuánto mejora la información exterior respecto de usar solo la época del año, $100\,(1 - \text{RMSE}_{\text{sin día actual}}/\text{RMSE}_{\text{sin exterior}})$. MACN-Ar y MACN-In no se incluyeron en la comparación: con 78 y 52 días, el primer entrenamiento queda tan corto que el ciclo anual extrapola mal y los errores no son comparables con los de las otras series.
+
+Los pronósticos anteriores no usan la temperatura interior ya medida. Si se dispusiera de ella (por ejemplo, con un datalogger que se lee todos los días), el error $AR(1)$ permite mejorar el pronóstico sumando al valor del modelo una fracción del error del día anterior, $\hat T(t) = X(t)\hat\beta + \hat\phi\, e(t-1)$ (el mejor predictor lineal de un modelo GLS; Goldberger, 1962). Esta variante se evaluó con el mismo esquema y se presenta en el Anexo.
+
+\subsubsection{Caso de las capturas de insectos}
+Cada observación es una revisión de trampa: la cantidad $Y_i$ de coleópteros o lepidópteros capturados en una sala desde la revisión anterior. Como el tiempo entre revisiones varía (de 9 a 161 días, con una mediana de 16{,}5), lo que se compara entre revisiones es la \textit{tasa diaria} de capturas. Para eso se usó un modelo lineal generalizado para conteos con un \textit{offset}, el logaritmo de los días de exposición $d_i$:
 \begin{equation}
-log(\mathbb{E}[Y]) = \beta_0 + \beta_1 Temp + \beta_2 Hum +\epsilon_t
+\log \mathbb{E}[Y_i] = \log d_i + \beta_0 + \beta_1\, \overline{T}_i + \beta_2\, \mathbb{1}\{\text{lepidóptero}\}_i + \beta_3\, \mathbb{1}\{\text{MACN-En}\}_i + \beta_4\, \mathbb{1}\{\text{MACN-Ma}\}_i
 \label{eq:modelo_poisson}
 \end{equation}
+donde $\overline{T}_i$ es la temperatura media exterior (SMN) promediada sobre los días de exposición, y las indicadoras ajustan por taxón y por sala (MACN-Ba es la sala de referencia). Así, $e^{\beta_1}$ es el factor por el que se multiplica la tasa diaria de capturas por cada $^\circ$C más de temperatura media. En la primera revisión de cada trampa y en la revisión posterior al invierno, en que no hubo revisiones intermedias, la temperatura se promedió sobre los 14 días previos. Las revisiones con más de 100 días de exposición se excluyeron, y quedaron 46 revisiones.
+
+Como primer modelo se usó la distribución de Poisson, el modelo estándar para conteos, que supone que la varianza es igual a la media. Para verificar ese supuesto se calculó el estadístico de dispersión de Pearson, $\sum_i r_i^2/(n-p)$, que debería dar cerca de 1. Como dio mucho mayor (Sección~\ref{sec:resultados_trampas}), se ajustó una binomial negativa, que agrega un parámetro $\theta$ y permite que la varianza crezca más rápido que la media: $\mathrm{Var}(Y_i) = \mu_i + \mu_i^2/\theta$. Los dos modelos se compararon por AIC y con un test de razón de verosimilitud. Como la Poisson es el caso límite $\theta \to \infty$, que está en el borde del espacio de parámetros, el p-valor de ese test se divide por 2. Como control de sensibilidad, se agregó la humedad relativa exterior media del período y se ajustó también un modelo cuasi-Poisson.
 
 % ==============================================================================
 % 5. RESULTADOS
@@ -189,42 +207,114 @@ log(\mathbb{E}[Y]) = \beta_0 + \beta_1 Temp + \beta_2 Hum +\epsilon_t
 \section{Resultados}
 
 \subsection{Sensibilidad térmica e inercia por sala}
-En la Tabla~\ref{tab:inercia} se resumen los parámetros estimados para cada una de las salas analizadas.
+La Tabla~\ref{tab:inercia} resume el modelo de rezagos distribuidos (ecuación~\ref{eq:ecuacion_rezagados_max}) ajustado a cada una de las 14 series. Para cada serie se informa la ventana de rezagos elegida, el \textit{efecto acumulado} $\theta$ (ecuación~\ref{eq:efecto_acumulado}: cuántos $^\circ$C sube la máxima interior si la máxima exterior sube 1\,$^\circ$C y se mantiene así durante toda la ventana) y qué parte de ese efecto llega el mismo día y el siguiente. Como referencia, se incluye la pendiente del modelo con el promedio de 3 días.
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{Modelo de rezagos distribuidos de la TMAX exterior por serie (GLS con $AR(1)$, ajustado por máxima verosimilitud). N: días con datos. Ventana: rezagos incluidos, en días, elegidos por AIC entre 0 y 14 y, como control de robustez, por BIC. Efecto: efecto acumulado, la suma de los coeficientes de los rezagos ($^\circ$C interiores por $^\circ$C exterior), con su error estándar entre paréntesis. \% días 0--1: porcentaje del efecto acumulado (AIC) que llega el mismo día y el siguiente. Prom. 3 d: pendiente del modelo con el promedio móvil de 3 días. Las series están separadas en expuestas y aisladas, y ordenadas por efecto acumulado.}
+\label{tab:inercia}
+\begin{tabular}{l r c c c c c r}
+\toprule
+ & & \multicolumn{2}{c}{\textbf{AIC}} & \multicolumn{2}{c}{\textbf{BIC}} & & \\
+\cmidrule(lr){3-4} \cmidrule(lr){5-6}
+\textbf{Serie} & \textbf{N} & \textbf{Ventana} & \textbf{Efecto (EE)} & \textbf{Ventana} & \textbf{Efecto} & \textbf{Prom. 3 d} & \textbf{\% días 0--1} \\
+\midrule
+\multicolumn{8}{l}{\textit{Salas expuestas}} \\
+BA-v                 & 1269 & 0--7  & 0{,}63 (0{,}02) & 0--6  & 0{,}61 & 0{,}40 & 57 \\
+MACN-Ar              &   78 & 0--2  & 0{,}60 (0{,}10) & 0--1  & 0{,}50 & 0{,}61 & 86 \\
+MACN-Pv Anexo        &  366 & 0--2  & 0{,}55 (0{,}02) & 0--2  & 0{,}55 & 0{,}54 & 93 \\
+\midrule
+\multicolumn{8}{l}{\textit{Salas aisladas}} \\
+MACN-Pv Ameghino     &  269 & 0--13 & 0{,}50 (0{,}04) & 0--6  & 0{,}29 & 0{,}13 & 24 \\
+MACN-Ict Laboratorio &  398 & 0--11 & 0{,}50 (0{,}04) & 0--6  & 0{,}38 & 0{,}22 & 42 \\
+MACN-Ma              &  332 & 0--10 & 0{,}47 (0{,}04) & 0--6  & 0{,}38 & 0{,}20 & 39 \\
+MACN-Or Antigua      &  693 & 0--14$^{*}$ & 0{,}44 (0{,}03) & 0--10 & 0{,}36 & 0{,}07 & 18 \\
+MACN-Ict Colección   &  710 & 0--10 & 0{,}39 (0{,}03) & 0--7  & 0{,}31 & 0{,}11 & 30 \\
+MACN-Or Azara        &  357 & 0--10 & 0{,}36 (0{,}03) & 0--7  & 0{,}28 & 0{,}09 & 24 \\
+MACN-In Arriba       &   52 & 0--5  & 0{,}28 (0{,}05) & 0--4  & 0{,}24 & 0{,}14 & 48 \\
+MACN-Pv General      &  303 & 0--5  & 0{,}27 (0{,}03) & 0--5  & 0{,}27 & 0{,}17 & 49 \\
+MACN-He              &  194 & 0--9  & 0{,}27 (0{,}03) & 0--5  & 0{,}18 & 0{,}10 & 35 \\
+BA-Pb                &  325 & 0--7  & 0{,}25 (0{,}03) & 0--6  & 0{,}22 & 0{,}09 & 31 \\
+MACN-In Abajo        &   52 & 0--4  & 0{,}22 (0{,}04) & 0--4  & 0{,}22 & 0{,}13 & 53 \\
+\bottomrule
+\multicolumn{8}{l}{\footnotesize $^{*}$ Ventana máxima probada: la inercia real de MACN-Or Antigua podría ser mayor.}
+\end{tabular}
+\end{table}
+
+En todas las series el exterior aporta información: el modelo de rezagos mejora claramente al modelo sin datos del exterior ($\Delta$AIC entre $-22$ y $-1619$). También mejora al promedio de 3 días en todas las series ($\Delta$AIC entre $-5$ y $-657$), y el test de razón de verosimilitud rechaza que los tres primeros días pesen igual en 10 de las 14 ($p < 0{,}05$; en MACN-He, Pv Ameghino, Pv General e In Arriba, $0{,}07 < p < 0{,}11$).
+
+La diferencia principal entre salas está en la \textbf{velocidad} con que les llega el exterior, más que en la magnitud. En las salas expuestas, el efecto se concentra en los primeros días: en MACN-Ar y Pv Anexo, entre el 86 y el 93\,\% llega el mismo día y el siguiente, y la ventana elegida llega hasta 2 días atrás. BA-v también recibe la mayor parte al principio, pero el efecto se extiende hasta una semana. En las salas aisladas, en cambio, solo entre el 18 y el 53\,\% llega en los dos primeros días y el resto sigue llegando hasta 4 a 14 días después. Con la ventana completa, varias salas aisladas (Pv Ameghino, Ict Laboratorio, Ma y Or Antigua) acumulan entre 0{,}44 y 0{,}50\,$^\circ$C por $^\circ$C exterior, cerca de las expuestas (0{,}55 a 0{,}63). Las que menos reciben (In, Pv General, He y BA-Pb, entre 0{,}22 y 0{,}28) son las más aisladas. La Figura~\ref{fig:rezagos_acumulado} muestra estos dos perfiles: en el Anexo la curva sube casi entera en los dos primeros días y se detiene, mientras que en Ameghino y Or Antigua sube de a poco y sigue creciendo hasta el final de la ventana.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.85\textwidth]{fig_rezagos_acumulado.png}
+  \caption{Efecto acumulado de la máxima exterior a medida que se suman días de rezago: el valor en el rezago $j$ es $\hat\beta_1 + \dots + \hat\beta_{j+1}$, la parte del efecto que llegó hasta $j$ días después. Cada curva termina en la ventana elegida por AIC, y su valor final es el efecto acumulado de la Tabla~\ref{tab:inercia}. Se destacan cinco series representativas; en gris, las demás.}
+  \label{fig:rezagos_acumulado}
+\end{figure}
+
+Por eso, el promedio de 3 días es adecuado para las salas expuestas (su pendiente coincide con el efecto acumulado), pero en las aisladas subestima el efecto entre 1{,}6 y 6 veces, porque corta la respuesta antes de que termine de llegar.
+
+La duración exacta de la inercia en las salas aisladas depende del criterio. El BIC, que castiga más cada día agregado, elige en las aisladas ventanas de hasta 4 a 10 días de rezago en lugar de hasta 4 a 14, y deja afuera la cola de rezagos lejanos, cuyos coeficientes son chicos uno por uno pero suman entre 0{,}1 y 0{,}2. Por eso el efecto acumulado de las aisladas debe leerse como un rango (por ejemplo, entre 0{,}29 y 0{,}50 en Pv Ameghino). Lo que no depende del criterio es el contraste de velocidad: con AIC y con BIC, MACN-Ar y Pv Anexo usan hasta 1 o 2 días de rezago y las salas aisladas, 4 o más. Además, al pronosticar días nuevos fuera de la muestra (Sección~\ref{sec:pronostico}), las ventanas largas predijeron mejor, lo que respalda la elección por AIC.
+
+Hay que tener en cuenta que el efecto acumulado se estima descontando el ciclo anual: mide cuánto responde cada sala a días más cálidos o más fríos de lo habitual para la época, no todo el vínculo entre la temperatura interior y la exterior. Además, cada serie se midió en un período distinto, así que la comparación entre salas es descriptiva.
+
+La Figura~\ref{fig:modelo_pv} muestra el contraste en Paleovertebrados, donde los tres dataloggers se midieron en el mismo año (2019), así que la diferencia entre sectores no se confunde con la del año. En el Anexo, la máxima interior reproduce casi día a día las subas y bajas de la exterior, algo atenuadas. En Ameghino, en cambio, los picos del exterior prácticamente desaparecen y la temperatura interior sigue una curva suave. Aun así, el efecto acumulado de los dos sectores es parecido (0{,}55 y 0{,}50): a Ameghino el calor le llega igual, pero repartido a lo largo de casi dos semanas, y por eso no se ven los picos. En los tres sectores, el modelo de rezagos sigue de cerca a la serie observada.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.88\textwidth]{fig_modelo_pv.png}
+  \caption{Temperatura máxima diaria en los tres sectores de Paleovertebrados (MACN-Pv) durante 2019. Gris: máxima exterior del SMN; negro: máxima interior observada; rojo punteado: valores ajustados por el modelo de rezagos distribuidos de cada sector (parte fija del modelo: rezagos de la TMAX exterior y ciclo anual, sin la corrección $AR(1)$). En el título de cada panel se indican la ventana de rezagos elegida por AIC y el efecto acumulado. Los huecos corresponden a días sin registros.}
+  \label{fig:modelo_pv}
+\end{figure}
+
+\subsection{Pronóstico de la temperatura interior}
+\label{sec:pronostico}
+La Figura~\ref{fig:pronostico} compara el error de pronóstico fuera de la muestra de los tres modelos en las 11 series con suficientes días para evaluarlo. Sin conocer la máxima exterior del mismo día, el modelo pronostica la máxima interior con un error típico (RMSE) de entre 0{,}5\,$^\circ$C (Or Azara) y 1{,}6\,$^\circ$C (Pv Anexo). En todas las series, la temperatura exterior de los días anteriores mejora el pronóstico respecto de usar solo la época del año: el error baja entre un 12\,\% (BA-v) y un 40\,\% (Pv Ameghino).
+
+Cuánto se pierde al no conocer la máxima exterior del mismo día depende del tipo de sala, de forma coherente con la Tabla~\ref{tab:inercia}. En las dos salas de respuesta más rápida, el error crece mucho: un 66\,\% en BA-v y un 55\,\% en Pv Anexo. En las aisladas, la pérdida es moderada (entre 10 y 24\,\% en Ict Laboratorio, Pv Ameghino, Ict Colección, He, BA-Pb y Or Antigua) o nula: en Ma, Pv General y Or Azara el modelo sin el día actual pronostica incluso algo mejor, porque elige una ventana más simple que se estima con menos error. Es decir, en las salas aisladas la temperatura interior de un día ya está determinada en buena parte por lo que pasó afuera los días anteriores, y se puede pronosticar con la información disponible a la mañana.
+
+La ventana larga de las salas aisladas también se sostiene en este ejercicio. Cuando la ventana se limitaba a un máximo de 7 días, las series que con 14 días eligen ventanas más largas pronosticaban peor en 8 de 10 casos. Por ejemplo, en Pv Ameghino, sin el día actual, el RMSE bajó de 0{,}89 a 0{,}68\,$^\circ$C al ampliar la ventana.
+
+Si además se usa la temperatura interior medida los días anteriores, mediante la corrección $AR(1)$, el error del pronóstico sin el día actual baja entre un 15\,\% (Pv Anexo) y un 67\,\% (He y Or Antigua), y queda entre 0{,}19 y 1{,}34\,$^\circ$C (Anexo~\ref{anexo:pronostico}). Con esa corrección, lo que agrega la información exterior se achica: respecto del modelo que solo usa la época del año (también corregido), el error baja entre un 0 y un 27\,\% según la sala, porque la temperatura interior de los días anteriores ya resume buena parte de lo que pasó afuera.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{fig_pronostico_rmse.png}
+  \caption{Error de pronóstico fuera de la muestra (RMSE, en $^\circ$C) de la máxima interior, con origen móvil y bloques de 30 días. Negro: modelo con la máxima exterior del día actual; azul: sin ella (solo días anteriores); gris: solo la época del año. Las series están ordenadas según cuánto empeora el pronóstico sin el día actual. MACN-Ar y MACN-In no se incluyen porque tienen muy pocos días para evaluar.}
+  \label{fig:pronostico}
+\end{figure}
+
+\subsection{Efecto del día de la semana}
+Los residuos del modelo de rezagos muestran, en algunas series, una autocorrelación a los 7 días, que sugiere un ciclo semanal que el modelo no incluye. Para evaluarlo, al modelo de rezagos se le agregó una indicadora de día hábil (de lunes a viernes, sin distinguir feriados) en 12 de las 14 series (MACN-Or no se incluyó en este análisis). En tres salas hay un efecto claro, que se mantiene con AIC y con BIC: a igual temperatura exterior, la máxima interior en días hábiles es 1{,}08\,$^\circ$C mayor en MACN-Ar (EE 0{,}20), 0{,}22\,$^\circ$C mayor en Pv Ameghino (EE 0{,}04) y 0{,}13\,$^\circ$C mayor en Ict Colección (EE 0{,}02). En el resto de las series el efecto es chico o nulo. Incluir el día de la semana casi no cambia el efecto acumulado del exterior (menos de 0{,}05), porque el día de la semana no está relacionado con el clima.
+
+En MACN-Ar, el efecto crece a medida que avanza el otoño (0{,}3\,$^\circ$C en abril, 1{,}2 en mayo y 2{,}3 en junio), lo que sugiere que la sala se calefacciona en los días hábiles. Es una hipótesis que habría que confirmar con el museo. La Figura~\ref{fig:dia_semana}, en el Anexo~\ref{anexo:dia_semana}, muestra el efecto de cada día de la semana en todas las series.
+
+\subsection{Dinámica de insectos plaga y condiciones ambientales}
+\label{sec:resultados_trampas}
+En las tres salas, la tasa diaria de capturas es mayor en los períodos más cálidos (Figura~\ref{fig:trampas_temp}). El modelo de Poisson no es adecuado para estos datos: el estadístico de dispersión de Pearson es $888{,}0/41 = 21{,}7$ ($p < 0{,}001$), es decir, la varianza de las capturas es unas 20 veces mayor que la que supone el modelo. Con esa sobredispersión, los errores estándar de la Poisson están muy subestimados y sus p-valores no son confiables. La binomial negativa corrige el problema: su dispersión es de 1{,}03, ajusta mucho mejor (AIC 357 contra 999; razón de verosimilitud $= 644$, $p < 0{,}001$) y estima $\hat\theta = 1{,}49$ (EE 0{,}34), un valor bajo que indica que las capturas son muy variables, aun entre revisiones con condiciones parecidas.
 
 \begin{table}[htbp]
 \centering
 \small
-\caption{Resultados del modelo GLS con estructura $AR(1)$ para cada sala y subsector.}
-\label{tab:inercia}
-\begin{tabular}{l c c c c c}
+\caption{Modelo binomial negativo de las capturas, con offset por los días de exposición ($n = 46$ revisiones). $e^{\beta}$: factor por el que se multiplica la tasa diaria de capturas. La sala de referencia es MACN-Ba y el taxón de referencia, coleópteros.}
+\label{tab:trampas}
+\begin{tabular}{l r r r r}
 \toprule
-\textbf{Sala / Subsector} & \textbf{N (días)} & \textbf{Inercia óptima} & \textbf{Pendiente $\beta$ ($\pm$ EE)} & \textbf{$\phi$ (AR1)} & \textbf{$R^2$} \\
+\textbf{Término} & $\boldsymbol{\hat\beta}$ & \textbf{EE} & $\boldsymbol{e^{\hat\beta}}$ & \textbf{p-valor} \\
 \midrule
-MACN\_Ar - General     & 76   & 2 días & 0,617 (0,103) & 0,557 & 0,829 \\
-MACN\_Pv - Anexo       & 364  & 2 días & 0,540 (0,028) & 0,480 & 0,946 \\
-BA\_v - General        & 1267 & 2 días & 0,397 (0,010) & 0,830 & 0,966 \\
-MACN\_Ict - Laboratorio& 396  & 3 días & 0,222 (0,012) & 0,872 & 0,977 \\
-MACN\_Ma - General     & 330  & 3 días & 0,194 (0,012) & 0,933 & 0,970 \\
-MACN\_Pv - Ameghino    & 267  & 4 días & 0,124 (0,013) & 0,905 & 0,945 \\
-MACN\_Ict - Colección  & 708  & 7 días & 0,105 (0,009) & 0,963 & 0,950 \\
-MACN\_Or - Azara       & 355  & 7 días & 0,091 (0,011) & 0,937 & 0,964 \\
-MACN\_Or - Antigua     & 691  & 7 días & 0,073 (0,007) & 0,958 & 0,959 \\
+Temperatura media exterior ($^\circ$C) & 0{,}209 & 0{,}050 & 1{,}23 & $< 0{,}001$ \\
+Lepidópteros (contra coleópteros)      & 0{,}693 & 0{,}259 & 2{,}00 & 0{,}007 \\
+MACN-En (contra MACN-Ba)               & $-1{,}172$ & 0{,}351 & 0{,}31 & $< 0{,}001$ \\
+MACN-Ma (contra MACN-Ba)               & $-2{,}424$ & 0{,}346 & 0{,}09 & $< 0{,}001$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-La Figura~\ref{fig:modelo_pv} ilustra el contraste de comportamiento térmico en Paleovertebrados: mientras el subsector Anexo copia fuertemente las ondas de calor y frío del exterior, el subsector Ameghino exhibe una marcada amortiguación e inercia térmica.
+Según la binomial negativa (Tabla~\ref{tab:trampas}), por cada $^\circ$C más de temperatura media exterior la tasa diaria de capturas aumenta un 23\,\% (IC 95\,\%: 12\,\% a 36\,\%), a igual sala y taxón. El efecto se mantiene con los otros modelos: la cuasi-Poisson da un 17\,\% (IC 95\,\%: 3\,\% a 32\,\%), con el mismo coeficiente que la Poisson pero con el error estándar corregido por la dispersión. La humedad relativa exterior no agrega información ($p = 0{,}83$; el AIC empeora en 2). Además, a igual temperatura, en las trampas se capturan el doble de lepidópteros que de coleópteros, y la tasa de capturas en MACN-En y MACN-Ma es el 31\,\% y el 9\,\% de la de MACN-Ba, respectivamente.
 
-\begin{figure}[htbp]
-  \centering
-  % Al especificar únicamente el ancho (width), LaTeX preserva automáticamente la proporción original
-  \includegraphics[width=0.88\textwidth]{fig_modelo_pv.png}
-  \caption{Ajuste del modelo GLS en Paleovertebrados (MACN\_Pv). Línea continua: mediciones observadas; línea punteada: predicción del modelo GLS.}
-  \label{fig:modelo_pv}
-\end{figure}
-
-\subsection{Dinámica de insectos plaga y condiciones ambientales}
-El análisis exploratorio de las trampas de coleópteros y lepidópteros indica una clara correspondencia entre las temperaturas estivales y el incremento en las tasas de captura (Figura~\ref{fig:trampas_temp}).
+Estos resultados deben leerse con cautela. Son 46 revisiones de un solo período (2019--2020), la temperatura es la del exterior y no la de cada sala, y las revisiones sucesivas de una misma trampa no son independientes, algo que el modelo no tiene en cuenta.
 
 \begin{figure}[htbp]
   \centering
@@ -250,6 +340,8 @@ Es necesario señalar que el muestreo de trampas biológicas presentó revisione
 % ==============================================================================
 \section{Referencias}
 \begin{itemize}
+    \item Goldberger, A. S. (1962). Best linear unbiased prediction in the generalized linear regression model. \textit{Journal of the American Statistical Association}, 57(298), 369--375.
+    \item Venables, W. N., \& Ripley, B. D. (2002). \textit{Modern Applied Statistics with S} (4.ª ed.). Springer. (Paquete \texttt{MASS}.)
     \item Pinheiro, J. C., \& Bates, D. M. (2000). \textit{Mixed-effects models in S and S-PLUS}. Springer.
     \item R Core Team (2023). \textit{R: A language and environment for statistical computing}. R Foundation for Statistical Computing, Vienna, Austria.
     \item Thomson, G. (1986). \textit{The Museum Environment}. Butterworth-Heinemann.
@@ -260,6 +352,22 @@ Es necesario señalar que el muestreo de trampas biológicas presentó revisione
 % ==============================================================================
 \appendix
 \section{Anexos}
-Diagnósticos complementarios de residuos y tablas auxiliares...
+\subsection{Pronóstico con la temperatura interior de los días anteriores}
+\label{anexo:pronostico}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{fig_pronostico_correccion.png}
+  \caption{Error de pronóstico fuera de la muestra (RMSE, en $^\circ$C) al corregir cada pronóstico con el error del día anterior según el $AR(1)$ estimado, $\hat T(t) = X(t)\hat\beta + \hat\phi\, e(t-1)$. Gris claro: sin el día actual y sin corrección (el azul de la Figura~\ref{fig:pronostico}). Naranja: solo la época del año, con corrección. Azul: sin el día actual, con corrección. Negro: con el día actual, con corrección.}
+  \label{fig:pronostico_correccion}
+\end{figure}
+
+\subsection{Efecto de cada día de la semana}
+\label{anexo:dia_semana}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{fig_dia_semana.png}
+  \caption{Diferencia de la máxima interior de cada día de la semana respecto del domingo, a igual temperatura exterior (modelo de rezagos con $AR(1)$ y un factor de día de la semana). Barras: intervalos de confianza del 95\,\%.}
+  \label{fig:dia_semana}
+\end{figure}
 
 \end{document}

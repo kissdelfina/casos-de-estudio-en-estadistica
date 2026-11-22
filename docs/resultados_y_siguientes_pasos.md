@@ -136,7 +136,10 @@ gls(temp_max ~ TMAX_l0 + TMAX_l1 + ... + TMAX_lK + sin_year + cos_year,
 | MACN-He | 0 a 9 | 7–10 | 0,27 (0,03) | 0,10 | −24 |
 | BA-Pb | 0 a 7 | 7–9 | 0,25 (0,03) | 0,09 | −74 |
 | MACN-In Abajo | 0 a 4 | 4–6 | 0,22 (0,04) | 0,13 | −8 |
-| MACN-Or | se saltea por las fechas repetidas | — | — | — | — |
+| MACN-Or Antigua | 0 a **14** (el máximo) | — | 0,44 (0,03) | 0,07 | −378 |
+| MACN-Or Azara | 0 a 10 | — | 0,36 (0,03) | 0,09 | −132 |
+
+MACN-Or se agregó el 22/11/2026: el 03 ahora separa los dos dataloggers (Antigua y Azara) como el 01 y el 05. Con BIC: Antigua 0 a 10 (0,36), Azara 0 a 7 (0,28). Las bullets de abajo se escribieron con 12 series; con Or, los pesos iguales se rechazan en 10 de 14.
 
 - **Los rezagos separados ajustan mejor que el promedio en todas las salas.** El test de razón de verosimilitud rechaza los pesos iguales (p < 0,05) en 8 de 12 series. Las excepciones son MACN-He, Pv Ameghino, Pv sin subsector e In Arriba, con p entre 0,07 y 0,10.
 - **El promedio de 3 días subestima el efecto en las salas aisladas:** el efecto acumulado es entre 2 y 4 veces la pendiente del promedio. Con ventanas de hasta 14 días, **la diferencia entre salas expuestas y aisladas está sobre todo en la velocidad, no en la magnitud**: las expuestas reciben 0,55–0,63 °C por °C exterior en 2 a 7 días, y varias aisladas reciben 0,39–0,50 en 10 a 13 días. Las que reciben menos (0,22–0,28: In, Pv sin subsector, He, BA-Pb) siguen siendo las más aisladas.

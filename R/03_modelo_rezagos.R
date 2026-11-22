@@ -91,8 +91,12 @@ extraer_info_sala <- function(filepath) {
   if (grepl("laboratorio", fname, ignore.case = TRUE)) subsector <- "Laboratorio"
   if (grepl("abajo", fname, ignore.case = TRUE)) subsector <- "Abajo"
   if (grepl("arriba", fname, ignore.case = TRUE)) subsector <- "Arriba"
+  # MACN-Or: son dos dataloggers con fechas superpuestas (colección antigua y
+  # Azara), igual que en 01_modelo_temperatura.R y 05_modelo_pronostico.R
+  if (grepl("azara", fname, ignore.case = TRUE) || grepl("04-01_2021", basename(filepath))) subsector <- "Azara"
+  if (grepl("MACN-Or-03_02_2020", basename(filepath))) subsector <- "Antigua"
 
-  sala_base <- gsub("[-_](Anexo|Ameghino|coleccion|laboratorio|abajo|arriba)", "", fname, ignore.case = TRUE)
+  sala_base <- gsub("[-_](Anexo|Ameghino|coleccion|laboratorio|abajo|arriba|azara|antigua)", "", fname, ignore.case = TRUE)
   sala_base <- gsub("-", "_", sala_base)
 
   paste(sala_base, subsector, sep = " - ")
@@ -223,7 +227,13 @@ ajustar_serie <- function(df_serie) {
     cor_l0_l1         = cor(df$TMAX_l0, df$TMAX_l1)
   )
 
-  list(resumen = resumen, coefs = coefs, aic = aic)
+  # Valores ajustados del mejor modelo (parte fija: rezagos + ciclo anual, sin
+  # la corrección AR(1)), para graficar contra lo observado
+  predicciones <- df %>%
+    transmute(Etiqueta = etiqueta, Date, temp_max, TMAX = TMAX_l0,
+              predicho = as.numeric(fitted(mejor)))
+
+  list(resumen = resumen, coefs = coefs, aic = aic, predicciones = predicciones)
 }
 
 series     <- split(datos_hobo, datos_hobo$Etiqueta)
@@ -232,6 +242,7 @@ resultados <- map(series, ajustar_serie) %>% compact()
 resumen_rezagos <- map_dfr(resultados, "resumen") %>% arrange(desc(Efecto_acumulado))
 coefs_rezagos   <- map_dfr(resultados, "coefs")
 aic_rezagos     <- map_dfr(resultados, "aic")
+predicciones_rezagos <- map_dfr(resultados, "predicciones")
 
 # ------------------------------------------------------------------------------
 # 4. Resultados
@@ -279,3 +290,101 @@ g_comparacion <- ggplot(resumen_rezagos,
   theme_minimal()
 
 print(g_comparacion)
+
+# ------------------------------------------------------------------------------
+# 5. Figura para el informe: MACN-Pv, observado contra ajustado
+# ------------------------------------------------------------------------------
+# Los tres dataloggers de Paleovertebrados se midieron en 2019, así que muestran
+# el contraste entre sectores sin confundirlo con el año. Se agrega la TMAX
+# exterior para ver cuánto de sus picos llega a cada sector.
+etiquetas_pv <- c("MACN_Pv - Anexo"            = "Anexo (expuesto)",
+                  "MACN_Pv - Ameghino"         = "Ameghino (aislado)",
+                  "MACN_Pv - General / Normal" = "General")
+
+datos_pv <- predicciones_rezagos %>%
+  filter(Etiqueta %in% names(etiquetas_pv)) %>%
+  # Completar los días sin datos con NA para que las líneas no crucen los huecos
+  group_by(Etiqueta) %>%
+  complete(Date = seq(min(Date), max(Date), by = "day")) %>%
+  ungroup() %>%
+  left_join(resumen_rezagos %>% select(Etiqueta, Rezagos_mejor, Efecto_acumulado),
+            by = "Etiqueta") %>%
+  mutate(Panel = paste0(etiquetas_pv[Etiqueta], ": rezagos ", Rezagos_mejor,
+                        " días, efecto acumulado ",
+                        format(round(Efecto_acumulado, 2), decimal.mark = ",")),
+         Panel = factor(Panel, levels = unique(Panel[order(match(Etiqueta, names(etiquetas_pv)))])))
+
+g_pv <- ggplot(datos_pv, aes(x = Date)) +
+  geom_line(aes(y = TMAX, color = "Máxima exterior (SMN)"), linewidth = 0.3, na.rm = TRUE) +
+  geom_line(aes(y = temp_max, color = "Máxima interior observada"), linewidth = 0.5, na.rm = TRUE) +
+  geom_line(aes(y = predicho, color = "Ajuste del modelo de rezagos"),
+            linewidth = 0.5, linetype = "dashed", na.rm = TRUE) +
+  scale_color_manual(values = c("Máxima exterior (SMN)"        = "gray75",
+                                "Máxima interior observada"    = "black",
+                                "Ajuste del modelo de rezagos" = "firebrick"),
+                     breaks = c("Máxima exterior (SMN)", "Máxima interior observada",
+                                "Ajuste del modelo de rezagos")) +
+  facet_wrap(~ Panel, ncol = 1) +
+  scale_x_date(date_labels = "%b %Y", date_breaks = "2 months") +
+  labs(title = "El Anexo sigue los picos del exterior; Ameghino los amortigua",
+       subtitle = "Paleovertebrados (MACN-Pv), 2019: temperatura máxima diaria",
+       x = NULL, y = "Temperatura máxima (°C)", color = NULL) +
+  theme_minimal(base_size = 11) +
+  theme(legend.position = "top",
+        strip.text = element_text(hjust = 0, face = "bold"),
+        panel.grid.minor = element_blank())
+
+print(g_pv)
+dir.create("resultados/figuras", recursive = TRUE, showWarnings = FALSE)
+ggsave("resultados/figuras/fig_modelo_pv.png", g_pv, width = 8, height = 7, dpi = 300)
+
+# ------------------------------------------------------------------------------
+# 6. Figura para el informe: cómo se acumula el efecto a lo largo de los rezagos
+# ------------------------------------------------------------------------------
+# Suma acumulada de los coeficientes hasta cada rezago. Cada coeficiente por
+# separado es inestable (rezagos muy correlacionados), pero la suma no, y su
+# forma muestra la velocidad: las salas expuestas llegan a su efecto total en
+# 1 o 2 días; las aisladas siguen sumando durante una a dos semanas.
+nombre_corto <- function(e) {
+  e <- sub(" - General / Normal", "", e)
+  gsub("_", "-", sub(" - ", " ", e))
+}
+destacadas <- c("MACN_Pv - Anexo", "BA_v - General / Normal",
+                "MACN_Pv - Ameghino", "MACN_Or - Antigua", "BA_Pb - General / Normal")
+
+acumulado <- coefs_rezagos %>%
+  arrange(Etiqueta, Rezago) %>%
+  group_by(Etiqueta) %>%
+  mutate(Acumulado = cumsum(Coef)) %>%
+  ungroup() %>%
+  mutate(Serie = nombre_corto(Etiqueta),
+         Destacada = Etiqueta %in% destacadas)
+
+etiquetas_fin <- acumulado %>%
+  filter(Destacada) %>%
+  group_by(Serie) %>%
+  slice_max(Rezago, n = 1) %>%
+  ungroup() %>%
+  # El Anexo termina en el rezago 2, entre otras líneas: su etiqueta va arriba
+  mutate(arriba = Etiqueta == "MACN_Pv - Anexo",
+         x_txt  = if_else(arriba, Rezago - 0.3, Rezago + 0.25),
+         y_txt  = if_else(arriba, Acumulado + 0.04, Acumulado))
+
+g_acumulado <- ggplot(acumulado, aes(x = Rezago, y = Acumulado, group = Serie)) +
+  geom_line(data = filter(acumulado, !Destacada), color = "gray80", linewidth = 0.5) +
+  geom_line(data = filter(acumulado, Destacada), aes(color = Serie), linewidth = 1) +
+  geom_point(data = filter(acumulado, Destacada), aes(color = Serie), size = 1.6) +
+  geom_text(data = etiquetas_fin, aes(x = x_txt, y = y_txt, label = Serie, color = Serie),
+            hjust = 0, size = 3.3) +
+  scale_color_brewer(palette = "Dark2", guide = "none") +
+  scale_x_continuous(breaks = 0:max_rezago, limits = c(0, max_rezago + 3.5)) +
+  labs(title = "En las salas expuestas el efecto llega en pocos días;\nen las aisladas se sigue acumulando durante una a dos semanas",
+       subtitle = "Suma de los coeficientes hasta cada rezago, en la ventana elegida por AIC. En gris, las demás series.",
+       x = "Días hacia atrás (rezago)",
+       y = "Efecto acumulado (°C interior por °C exterior)") +
+  theme_minimal(base_size = 11) +
+  theme(panel.grid.minor = element_blank(),
+        plot.title = element_text(size = 12))
+
+print(g_acumulado)
+ggsave("resultados/figuras/fig_rezagos_acumulado.png", g_acumulado, width = 8, height = 5, dpi = 300)
