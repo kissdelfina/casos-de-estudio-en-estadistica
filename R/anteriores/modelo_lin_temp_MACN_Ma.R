@@ -5,7 +5,7 @@ library(nlme)
 library(ggplot2)
 
 # 1. CARGA Y PREPROCESAMIENTO
-path_macn_ma <- "Datos TP FINAL/MACN-Ma/MACN-Ma-03_02_2020-22_12_2020.txt"
+path_macn_ma <- "datos/hobo/MACN-Ma-03_02_2020-22_12_2020.txt"
 targets_raw <- read.delim(path_macn_ma, sep = ";")
 
 targets <- targets_raw %>%
@@ -16,7 +16,7 @@ targets <- targets_raw %>%
   group_by(Date) %>%
   summarise(temp_max = max(temp_max, na.rm = TRUE), .groups = "drop")
 
-smn_1991 <- read_xlsx('Datos TP FINAL/smn_datos_meteorologicos_1991_2020.xlsx')
+smn_1991 <- read_xlsx('datos/smn/smn_datos_meteorologicos_1991_2020.xlsx')
 smn_1991 <- smn_1991[smn_1991$NRO_OMM == '87585', ]
 smn_1991$Date <- as.Date(smn_1991$FECHA)
 

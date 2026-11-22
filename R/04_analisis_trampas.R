@@ -49,7 +49,7 @@ cat("Máximo:", max(df_analisis$dias_exp, na.rm=TRUE), "días (revisión tras el
 
 
 # temperatura media 
-smn_1991 <- read_xlsx("Datos TP FINAL/smn_datos_meteorologicos_1991_2020.xlsx") %>%
+smn_1991 <- read_xlsx("datos/smn/smn_datos_meteorologicos_1991_2020.xlsx") %>%
   filter(trimws(as.character(NRO_OMM)) == "87585") %>%
   mutate(
     Date = as.Date(FECHA),
@@ -138,5 +138,5 @@ g2 <- ggplot(df_analisis %>% filter(!is.na(tasa_diaria) & dias_exp < 100),
 print(g2)
 
 # Guardar figuras para el informe
-ggsave("graficos/fig_trampas_temporal.png", g1, width = 8, height = 5, dpi = 300)
-ggsave("graficos/fig_trampas_temperatura.png", g2, width = 8, height = 4, dpi = 300)
+ggsave("resultados/figuras/fig_trampas_temporal.png", g1, width = 8, height = 5, dpi = 300)
+ggsave("resultados/figuras/fig_trampas_temperatura.png", g2, width = 8, height = 4, dpi = 300)

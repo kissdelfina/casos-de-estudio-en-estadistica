@@ -4,8 +4,8 @@ library(ggplot2)
 library(patchwork)
 library(tidyr)
 
-BA_v_2018_9 <- read.csv2("Datos TP FINAL/BA-v/BA_v-21_05_2018-27_12_2019.txt")
-BA_v_2020 <- read.csv2("Datos TP FINAL/BA-v/BA_v-02_03_2020-22_12_2020.txt")
+BA_v_2018_9 <- read.csv2("datos/hobo/BA_v-21_05_2018-27_12_2019.txt")
+BA_v_2020 <- read.csv2("datos/hobo/BA_v-02_03_2020-22_12_2020.txt")
 
 # Función para procesar y generar el gráfico apilado
 plot_hobo <- function(data, titulo, breaks_x = "3 months") {
