@@ -88,7 +88,7 @@
 
 \textbf{Metodología:} Se analizaron los registros de temperatura de 14 dataloggers HOBO ubicados en 9 salas o colecciones, medidos en distintos períodos entre 2014 y 2025 (entre 52 y 1269 días por serie). En algunas salas hubo dos o tres dataloggers en sectores distintos, y cada uno se analizó como una serie propia. La temperatura máxima diaria de cada serie se modeló en función de la máxima exterior del mismo día y de hasta 14 días anteriores, con cada día como predictora separada (modelo de rezagos distribuidos), más un ciclo anual. Por la fuerte autocorrelación entre días consecutivos, los modelos se ajustaron por mínimos cuadrados generalizados (GLS) con errores autorregresivos de primer orden ($AR(1)$). La cantidad de días de rezago de cada sala se eligió por AIC, y se usó el BIC como control de robustez. Además, se evaluó fuera de la muestra la capacidad de pronosticar la temperatura interior sin conocer la exterior del mismo día. Por otro lado, se modelaron las capturas de insectos en trampas con modelos para datos de conteo, con un offset por la duración de cada período de exposición.
 
-\textbf{Principales Hallazgos:} En todas las salas la temperatura exterior influye sobre la interior, pero las salas difieren sobre todo en la velocidad con que les llega. En las \textit{salas expuestas} (Paleovertebrados Anexo, Arácnidos y BA-v), la máxima interior sube entre 0{,}55 y 0{,}63\,$^\circ$C por cada $^\circ$C de aumento sostenido de la máxima exterior, y en Anexo y Arácnidos casi todo el efecto llega el mismo día y el siguiente. En las \textit{salas aisladas}, solo una parte menor llega en los dos primeros días y el resto sigue llegando durante una a dos semanas. Algunas, como Paleovertebrados Ameghino, Ictiología Laboratorio, Mastozoología y Ornitología, acumulan finalmente un efecto cercano al de las expuestas (entre 0{,}36 y 0{,}50 según el AIC, algo menos con el BIC, que es más conservador), mientras que otras, como Invertebrados, Herpetología y BA-Pb, reciben menos (0{,}22 a 0{,}28). El modelo habitual con el promedio de los últimos 3 días subestima el efecto en las salas aisladas, porque corta la respuesta antes de que termine de llegar. Con la temperatura exterior de los días anteriores se puede pronosticar la máxima interior con un error típico de entre 0{,}5 y 1{,}6\,$^\circ$C, y conocer la del mismo día solo mejora mucho el pronóstico en las salas expuestas. En cuanto al riesgo biológico, la tasa diaria de capturas de insectos aumenta con la temperatura exterior: según un modelo binomial negativo, que tiene en cuenta la fuerte sobredispersión de los conteos, aumenta un 23\,\% por cada $^\circ$C (IC 95\,\%: 12\,\% a 36\,\%), con mayor actividad en los meses cálidos.
+\textbf{Principales Hallazgos:} En todas las salas la temperatura exterior influye sobre la interior, pero las salas difieren sobre todo en la velocidad con que les llega. En las \textit{salas expuestas} (Paleovertebrados Anexo, Arácnidos y BA-v), la máxima interior sube entre 0{,}55 y 0{,}63\,$^\circ$C por cada $^\circ$C de aumento sostenido de la máxima exterior, y en Anexo y Arácnidos casi todo el efecto llega el mismo día y el siguiente. En las \textit{salas aisladas}, solo una parte menor llega en los dos primeros días y el resto sigue llegando durante una a dos semanas. Algunas, como Paleovertebrados Ameghino, Ictiología Laboratorio, Mastozoología y Ornitología, acumulan finalmente un efecto cercano al de las expuestas (entre 0{,}36 y 0{,}50), mientras que otras, como Invertebrados, Herpetología y BA-Pb, reciben menos (0{,}22 a 0{,}28). El modelo habitual con el promedio de los últimos 3 días subestima el efecto en las salas aisladas, porque corta la respuesta antes de que termine de llegar. Con la temperatura exterior de los días anteriores se puede pronosticar la máxima interior con un error típico de entre 0{,}5 y 1{,}6\,$^\circ$C, y conocer la del mismo día solo mejora mucho el pronóstico en las salas expuestas. En cuanto al riesgo biológico, la tasa diaria de capturas de insectos aumenta con la temperatura exterior: según un modelo binomial negativo, que tiene en cuenta la fuerte sobredispersión de los conteos, aumenta un 23\,\% por cada $^\circ$C (IC 95\,\%: 12\,\% a 36\,\%), con mayor actividad en los meses cálidos.
 
 \textbf{Implicancias:} Los hallazgos permiten identificar qué sectores requieren intervención prioritaria en aislamiento pasivo o acondicionamiento climático activo, y justifican el establecimiento de calendarios de monitoreo y control de plagas intensificados al comienzo de la temporada estival.
 
@@ -222,11 +222,11 @@ donde $\hat V$ es la matriz de covarianzas estimada de $(\hat\beta_1, \dots, \ha
 
 El $AR(1)$ mejora claramente el ajuste en todas las series: el AIC baja entre 23 y 1468 puntos respecto del mismo modelo sin correlación, y $\hat\phi$ va de 0{,}42 (Pv Anexo) a 0{,}93 (Ict Colección). Si se ignorara la autocorrelación, el error estándar del efecto acumulado sería entre 1{,}1 y 2 veces más chico que el estimado con $AR(1)$. Como control, también se probaron errores $AR(2)$ y $ARMA(1,1)$ (ver la sección de diagnóstico). % TODO: referenciar la sección de diagnóstico (punto 11)
 
-\paragraph{Elección de la ventana de rezagos.} Para cada serie se ajustaron los modelos con $K = 0, 1, \dots, 14$ y se eligió el de menor AIC. Para que los AIC sean comparables se tomaron dos recaudos. Primero, todos los modelos se ajustaron por máxima verosimilitud (ML) y no por máxima verosimilitud restringida (REML), que es la opción por defecto de GLS: la verosimilitud restringida depende de las predictoras del modelo, así que no sirve para comparar modelos con distintas predictoras. Segundo, todos los modelos de una serie se ajustaron sobre los mismos días, los que tienen disponibles los 14 rezagos. Como control de robustez, la ventana también se eligió por BIC, que penaliza cada parámetro con $\log n$ en lugar de 2 (de 4 a 7, según la serie) y por eso tiende a elegir ventanas más cortas.
+\paragraph{Elección de la ventana de rezagos.} Para cada serie se ajustaron los modelos con $K = 0, 1, \dots, 14$ y se eligió el de menor AIC. Para que los AIC sean comparables se tomaron dos recaudos. Primero, todos los modelos se ajustaron por máxima verosimilitud (ML) y no por máxima verosimilitud restringida (REML), que es la opción por defecto de GLS: la verosimilitud restringida depende de las predictoras del modelo, así que no sirve para comparar modelos con distintas predictoras. Segundo, todos los modelos de una serie se ajustaron sobre los mismos días, los que tienen disponibles los 14 rezagos.
 
 \paragraph{Comparaciones.} Para medir cuánto aporta el clima exterior, el modelo elegido se comparó por AIC con un modelo sin datos del exterior, que solo tiene el ciclo anual. Esa comparación es necesaria porque el $R^2$ de estos modelos es engañoso: en series de casi un año, el seno y el coseno por sí solos explican la mayor parte de la variación, y el $R^2$ supera 0{,}9 aunque el exterior aporte poco. Además, se evaluó si el promedio de 3 días es una simplificación aceptable. Ese modelo es el de rezagos con $K = 2$ y la restricción $\beta_1 = \beta_2 = \beta_3$, así que los dos modelos están anidados y se pueden comparar con un test de razón de verosimilitud, con 2 grados de libertad (las dos igualdades que impone la restricción).
 
-\paragraph{Día de la semana.} Para evaluar si la actividad del museo modifica la temperatura de las salas, al modelo de rezagos de cada serie (con la ventana elegida y errores $AR(1)$) se le agregó una variable $H_t$, que vale 1 si $t$ es un día hábil (de lunes a viernes) y 0 si es sábado o domingo. Su coeficiente mide la diferencia de temperatura máxima entre días hábiles y fines de semana, a igual temperatura exterior. Los feriados se contaron como días hábiles, porque no se dispuso de un calendario de feriados. También se probó un factor con los siete días de la semana, y los modelos se compararon por AIC y por BIC.
+\paragraph{Día de la semana.} Para evaluar si la actividad del museo modifica la temperatura de las salas, al modelo de rezagos de cada serie (con la ventana elegida y errores $AR(1)$) se le agregó una variable $H_t$, que vale 1 si $t$ es un día hábil (de lunes a viernes) y 0 si es sábado o domingo. Su coeficiente mide la diferencia de temperatura máxima entre días hábiles y fines de semana, a igual temperatura exterior. Los feriados se contaron como días hábiles, porque no se dispuso de un calendario de feriados. También se probó un factor con los siete días de la semana, y los modelos se compararon por AIC.
 
 \subsubsection{Evaluación del pronóstico}
 Por último, se evaluó si el modelo sirve para pronosticar la máxima interior de un día antes de que ocurra. En la práctica, a la mañana todavía no se conoce la máxima exterior de ese día, así que el modelo de la ecuación~\ref{eq:ecuacion_rezagados_max} no puede usarse tal cual para pronosticar. Por eso se compararon tres modelos para cada serie, todos con errores $AR(1)$:
@@ -264,33 +264,31 @@ La Tabla~\ref{tab:inercia} resume el modelo de rezagos distribuidos (ecuación~\
 \centering
 \footnotesize
 \setlength{\tabcolsep}{4pt}
-\caption{Modelo de rezagos distribuidos de la TMAX exterior por serie (GLS con $AR(1)$, ajustado por máxima verosimilitud). N: días con datos. Ventana: rezagos incluidos, en días, elegidos por AIC entre 0 y 14 y, como control de robustez, por BIC. Efecto: efecto acumulado, la suma de los coeficientes de los rezagos ($^\circ$C interiores por $^\circ$C exterior), con su error estándar entre paréntesis. \% días 0--1: porcentaje del efecto acumulado (AIC) que llega el mismo día y el siguiente. Prom. 3 d: pendiente del modelo con el promedio móvil de 3 días. Las series están separadas en expuestas y aisladas, y ordenadas por efecto acumulado.}
+\caption{Modelo de rezagos distribuidos de la TMAX exterior por serie (GLS con $AR(1)$, ajustado por máxima verosimilitud). N: días con datos. Ventana: rezagos incluidos, en días, elegidos por AIC entre 0 y 14. Efecto: efecto acumulado, la suma de los coeficientes de los rezagos ($^\circ$C interiores por $^\circ$C exterior), con su error estándar entre paréntesis. \% días 0--1: porcentaje del efecto acumulado que llega el mismo día y el siguiente. Prom. 3 d: pendiente del modelo con el promedio móvil de 3 días. Las series están separadas en expuestas y aisladas, y ordenadas por efecto acumulado.}
 \label{tab:inercia}
-\begin{tabular}{l r c c c c c r}
+\begin{tabular}{l r c c c r}
 \toprule
- & & \multicolumn{2}{c}{\textbf{AIC}} & \multicolumn{2}{c}{\textbf{BIC}} & & \\
-\cmidrule(lr){3-4} \cmidrule(lr){5-6}
-\textbf{Serie} & \textbf{N} & \textbf{Ventana} & \textbf{Efecto (EE)} & \textbf{Ventana} & \textbf{Efecto} & \textbf{Prom. 3 d} & \textbf{\% días 0--1} \\
+\textbf{Serie} & \textbf{N} & \textbf{Ventana} & \textbf{Efecto (EE)} & \textbf{Prom. 3 d} & \textbf{\% días 0--1} \\
 \midrule
-\multicolumn{8}{l}{\textit{Salas expuestas}} \\
-BA-v                 & 1269 & 0--7  & 0{,}63 (0{,}02) & 0--6  & 0{,}61 & 0{,}40 & 57 \\
-MACN-Ar              &   78 & 0--2  & 0{,}60 (0{,}10) & 0--1  & 0{,}50 & 0{,}61 & 86 \\
-MACN-Pv Anexo        &  366 & 0--2  & 0{,}55 (0{,}02) & 0--2  & 0{,}55 & 0{,}54 & 93 \\
+\multicolumn{6}{l}{\textit{Salas expuestas}} \\
+BA-v                 & 1269 & 0--7  & 0{,}63 (0{,}02) & 0{,}40 & 57 \\
+MACN-Ar              &   78 & 0--2  & 0{,}60 (0{,}10) & 0{,}61 & 86 \\
+MACN-Pv Anexo        &  366 & 0--2  & 0{,}55 (0{,}02) & 0{,}54 & 93 \\
 \midrule
-\multicolumn{8}{l}{\textit{Salas aisladas}} \\
-MACN-Pv Ameghino     &  269 & 0--13 & 0{,}50 (0{,}04) & 0--6  & 0{,}29 & 0{,}13 & 24 \\
-MACN-Ict Laboratorio &  398 & 0--11 & 0{,}50 (0{,}04) & 0--6  & 0{,}38 & 0{,}22 & 42 \\
-MACN-Ma              &  332 & 0--10 & 0{,}47 (0{,}04) & 0--6  & 0{,}38 & 0{,}20 & 39 \\
-MACN-Or Antigua      &  693 & 0--14$^{*}$ & 0{,}44 (0{,}03) & 0--10 & 0{,}36 & 0{,}07 & 18 \\
-MACN-Ict Colección   &  710 & 0--10 & 0{,}39 (0{,}03) & 0--7  & 0{,}31 & 0{,}11 & 30 \\
-MACN-Or Azara        &  357 & 0--10 & 0{,}36 (0{,}03) & 0--7  & 0{,}28 & 0{,}09 & 24 \\
-MACN-In Arriba       &   52 & 0--5  & 0{,}28 (0{,}05) & 0--4  & 0{,}24 & 0{,}14 & 48 \\
-MACN-Pv General      &  303 & 0--5  & 0{,}27 (0{,}03) & 0--5  & 0{,}27 & 0{,}17 & 49 \\
-MACN-He              &  194 & 0--9  & 0{,}27 (0{,}03) & 0--5  & 0{,}18 & 0{,}10 & 35 \\
-BA-Pb                &  325 & 0--7  & 0{,}25 (0{,}03) & 0--6  & 0{,}22 & 0{,}09 & 31 \\
-MACN-In Abajo        &   52 & 0--4  & 0{,}22 (0{,}04) & 0--4  & 0{,}22 & 0{,}13 & 53 \\
+\multicolumn{6}{l}{\textit{Salas aisladas}} \\
+MACN-Pv Ameghino     &  269 & 0--13 & 0{,}50 (0{,}04) & 0{,}13 & 24 \\
+MACN-Ict Laboratorio &  398 & 0--11 & 0{,}50 (0{,}04) & 0{,}22 & 42 \\
+MACN-Ma              &  332 & 0--10 & 0{,}47 (0{,}04) & 0{,}20 & 39 \\
+MACN-Or Antigua      &  693 & 0--14$^{*}$ & 0{,}44 (0{,}03) & 0{,}07 & 18 \\
+MACN-Ict Colección   &  710 & 0--10 & 0{,}39 (0{,}03) & 0{,}11 & 30 \\
+MACN-Or Azara        &  357 & 0--10 & 0{,}36 (0{,}03) & 0{,}09 & 24 \\
+MACN-In Arriba       &   52 & 0--5  & 0{,}28 (0{,}05) & 0{,}14 & 48 \\
+MACN-Pv General      &  303 & 0--5  & 0{,}27 (0{,}03) & 0{,}17 & 49 \\
+MACN-He              &  194 & 0--9  & 0{,}27 (0{,}03) & 0{,}10 & 35 \\
+BA-Pb                &  325 & 0--7  & 0{,}25 (0{,}03) & 0{,}09 & 31 \\
+MACN-In Abajo        &   52 & 0--4  & 0{,}22 (0{,}04) & 0{,}13 & 53 \\
 \bottomrule
-\multicolumn{8}{l}{\footnotesize $^{*}$ Ventana máxima probada: la inercia real de MACN-Or Antigua podría ser mayor.}
+\multicolumn{6}{l}{\footnotesize $^{*}$ Ventana máxima probada: la inercia real de MACN-Or Antigua podría ser mayor.}
 \end{tabular}
 \end{table}
 
@@ -307,7 +305,7 @@ La diferencia principal entre salas está en la \textbf{velocidad} con que les l
 
 Por eso, el promedio de 3 días es adecuado para las salas expuestas (su pendiente coincide con el efecto acumulado), pero en las aisladas subestima el efecto entre 1{,}6 y 6 veces, porque corta la respuesta antes de que termine de llegar.
 
-La duración exacta de la inercia en las salas aisladas depende del criterio. El BIC, que castiga más cada día agregado, elige en las aisladas ventanas de hasta 4 a 10 días de rezago en lugar de hasta 4 a 14, y deja afuera la cola de rezagos lejanos, cuyos coeficientes son chicos uno por uno pero suman entre 0{,}1 y 0{,}2. Por eso el efecto acumulado de las aisladas debe leerse como un rango (por ejemplo, entre 0{,}29 y 0{,}50 en Pv Ameghino). Lo que no depende del criterio es el contraste de velocidad: con AIC y con BIC, MACN-Ar y Pv Anexo usan hasta 1 o 2 días de rezago y las salas aisladas, 4 o más. Además, al pronosticar días nuevos fuera de la muestra (Sección~\ref{sec:pronostico}), las ventanas largas predijeron mejor, lo que respalda la elección por AIC.
+En algunas salas aisladas el AIC es casi plano en un rango amplio de ventanas (por ejemplo, entre 7 y 11 días en MACN-Ma y entre 7 y 10 en MACN-He), así que la duración exacta de su inercia es incierta. Lo que no depende de eso es el contraste de velocidad: MACN-Ar y Pv Anexo usan hasta 2 días de rezago y las salas aisladas, 4 o más. Además, al pronosticar días nuevos fuera de la muestra (Sección~\ref{sec:pronostico}), las ventanas largas predijeron mejor, lo que respalda la elección por AIC.
 
 Hay que tener en cuenta que el efecto acumulado se estima descontando el ciclo anual: mide cuánto responde cada sala a días más cálidos o más fríos de lo habitual para la época, no todo el vínculo entre la temperatura interior y la exterior. Además, cada serie se midió en un período distinto, así que la comparación entre salas es descriptiva.
 
@@ -338,7 +336,7 @@ Si además se usa la temperatura interior medida los días anteriores, mediante 
 \end{figure}
 
 \subsection{Efecto del día de la semana}
-Los residuos del modelo de rezagos muestran, en algunas series, una autocorrelación a los 7 días, que sugiere un ciclo semanal que el modelo no incluye. Para evaluarlo se agregó al modelo la variable de día hábil descrita en la metodología, en 12 de las 14 series (MACN-Or no se incluyó en este análisis). En tres salas hay un efecto claro, que se mantiene con AIC y con BIC: a igual temperatura exterior, la máxima interior en días hábiles es 1{,}08\,$^\circ$C mayor en MACN-Ar (EE 0{,}20), 0{,}22\,$^\circ$C mayor en Pv Ameghino (EE 0{,}04) y 0{,}13\,$^\circ$C mayor en Ict Colección (EE 0{,}02). En el resto de las series el efecto es chico o nulo. Incluir el día de la semana casi no cambia el efecto acumulado del exterior (menos de 0{,}05), porque el día de la semana no está relacionado con el clima.
+Los residuos del modelo de rezagos muestran, en algunas series, una autocorrelación a los 7 días, que sugiere un ciclo semanal que el modelo no incluye. Para evaluarlo se agregó al modelo la variable de día hábil descrita en la metodología, en 12 de las 14 series (MACN-Or no se incluyó en este análisis). En tres salas hay un efecto claro: a igual temperatura exterior, la máxima interior en días hábiles es 1{,}08\,$^\circ$C mayor en MACN-Ar (EE 0{,}20), 0{,}22\,$^\circ$C mayor en Pv Ameghino (EE 0{,}04) y 0{,}13\,$^\circ$C mayor en Ict Colección (EE 0{,}02). En el resto de las series el efecto es chico o nulo. Incluir el día de la semana casi no cambia el efecto acumulado del exterior (menos de 0{,}05), porque el día de la semana no está relacionado con el clima.
 
 En MACN-Ar, el efecto crece a medida que avanza el otoño (0{,}3\,$^\circ$C en abril, 1{,}2 en mayo y 2{,}3 en junio), lo que sugiere que la sala se calefacciona en los días hábiles. Es una hipótesis que habría que confirmar con el museo. La Figura~\ref{fig:dia_semana}, en el Anexo~\ref{anexo:dia_semana}, muestra el efecto de cada día de la semana en todas las series.
 
