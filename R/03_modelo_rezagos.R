@@ -8,6 +8,9 @@
 #
 # donde TMAX_lk es la máxima exterior de hace k días. Para cada serie:
 #   - se prueban K = 0, 1, ..., max_rezago y se elige el K con menor AIC;
+#     como prueba de robustez, también se informa el K con menor BIC, que
+#     castiga cada parámetro con log(n) en vez de 2 y elige ventanas iguales
+#     o más cortas;
 #   - se compara contra el modelo del promedio de 3 días y contra un modelo
 #     sin exterior (para medir el aporte real del exterior);
 #   - se testea si los pesos iguales del promedio son razonables: el promedio
@@ -33,17 +36,27 @@ library(lubridate)
 library(tidyverse)
 library(nlme)
 
-max_rezago <- 7   # cantidad máxima de días hacia atrás que se prueban
+max_rezago <- 14  # cantidad máxima de días hacia atrás que se prueban
 
 # ------------------------------------------------------------------------------
 # 1. SMN: TMAX diaria de la estación 87585 (Buenos Aires Observatorio)
 # ------------------------------------------------------------------------------
-smn_1991 <- read_xlsx("Datos TP FINAL/smn_datos_meteorologicos_1991_2020.xlsx") %>%
-  filter(NRO_OMM == 87585) %>%
-  transmute(Date = as.Date(FECHA),
-            TMAX = suppressWarnings(as.numeric(gsub(",", ".", TMAX))))  # "S/D" -> NA
+# Leer el xlsx (72 MB) consume mucha memoria: la primera vez se guarda la
+# estación filtrada en un .rds y las corridas siguientes leen ese archivo.
+ruta_cache <- "datos/procesados/smn_87585_1991_2020.rds"
+if (file.exists(ruta_cache)) {
+  smn_1991 <- readRDS(ruta_cache)
+} else {
+  smn_1991 <- read_xlsx("datos/smn/smn_datos_meteorologicos_1991_2020.xlsx") %>%
+    filter(NRO_OMM == 87585) %>%
+    transmute(Date = as.Date(FECHA),
+              TMAX = suppressWarnings(as.numeric(gsub(",", ".", TMAX))))  # "S/D" -> NA
+  dir.create(dirname(ruta_cache), recursive = TRUE, showWarnings = FALSE)
+  saveRDS(smn_1991, ruta_cache)
+  gc()
+}
 
-smn_2021 <- read.delim("Datos TP FINAL/smn_datos_meteorologicos_desde_2021.lst") %>%
+smn_2021 <- read.delim("datos/smn/smn_datos_meteorologicos_desde_2021.lst") %>%
   filter(trimws(NRO_OMM) == "87585") %>%
   transmute(Date = as.Date(trimws(FECHA), format = "%d/%m/%Y"),
             TMAX = suppressWarnings(as.numeric(trimws(TMAX))))
@@ -96,7 +109,7 @@ leer_hobo <- function(path) {
     mutate(Archivo = basename(path), Etiqueta = extraer_info_sala(path))
 }
 
-archivos <- list.files("Datos TP FINAL/No HOBO", pattern = "\\.txt$", full.names = TRUE)
+archivos <- list.files("datos/hobo", pattern = "\\.txt$", full.names = TRUE)
 datos_hobo <- map_dfr(archivos, leer_hobo)
 
 # ------------------------------------------------------------------------------
@@ -158,6 +171,7 @@ ajustar_serie <- function(df_serie) {
     Etiqueta = etiqueta,
     Modelo   = names(modelos),
     AIC      = map_dbl(modelos, AIC),
+    BIC      = map_dbl(modelos, BIC),
     phi      = map_dbl(modelos, ~ coef(.x$modelStruct$corStruct, unconstrained = FALSE))
   )
 
@@ -182,6 +196,11 @@ ajustar_serie <- function(df_serie) {
   efecto_acum <- sum(b[nm])
   ee_acum     <- sqrt(sum(V[nm, nm]))
 
+  # Mejor cantidad de rezagos según BIC, y su efecto acumulado
+  k_bic   <- as.integer(sub("rezagos_0a", "", aic_rez$Modelo[which.min(aic_rez$BIC)]))
+  m_bic   <- modelos[[paste0("rezagos_0a", k_bic)]]
+  nm_bic  <- nombres_rezagos(k_bic)
+
   # ¿Pesos iguales? prom3d está anidado en rezagos_0a2 (b0 = b1 = b2)
   p_pesos_iguales <- anova(modelos$prom3d, modelos$rezagos_0a2)$`p-value`[2]
 
@@ -191,6 +210,9 @@ ajustar_serie <- function(df_serie) {
     Rezagos_mejor     = paste0("0 a ", k_mejor),
     Efecto_acumulado  = efecto_acum,
     EE_acumulado      = ee_acum,
+    Rezagos_BIC       = paste0("0 a ", k_bic),
+    Efecto_acum_BIC   = sum(coef(m_bic)[nm_bic]),
+    EE_acum_BIC       = sqrt(sum(vcov(m_bic)[nm_bic, nm_bic])),
     Pendiente_prom3d  = unname(coef(modelos$prom3d)["TMAX_prom3d"]),
     # Negativo = los rezagos separados ajustan mejor que el promedio de 3 días
     dAIC_vs_prom3d    = AIC(mejor) - AIC(modelos$prom3d),
@@ -220,6 +242,11 @@ print(resumen_rezagos %>% mutate(across(where(is.numeric), ~ round(.x, 3))),
 
 cat("\n=== COEFICIENTES DE CADA REZAGO (mejor modelo) ===\n")
 print(coefs_rezagos %>% mutate(across(c(Coef, EE), ~ round(.x, 3))), n = Inf)
+
+dir.create("resultados/tablas", recursive = TRUE, showWarnings = FALSE)
+write_csv(resumen_rezagos, "resultados/tablas/rezagos_resumen.csv")
+write_csv(coefs_rezagos,   "resultados/tablas/rezagos_coeficientes.csv")
+write_csv(aic_rezagos,     "resultados/tablas/rezagos_aic.csv")
 
 # Coeficiente de cada rezago con IC del 95 %
 g_rezagos <- ggplot(coefs_rezagos, aes(x = Rezago, y = Coef)) +

@@ -6,12 +6,22 @@ library(ggplot2)
 library(scales)
 
 # smn
-smn_1991 <- read_xlsx('Datos TP FINAL/smn_datos_meteorologicos_1991_2020.xlsx') %>%
-  filter(NRO_OMM == '87585') %>%
-  mutate(Date = as.Date(FECHA), TMAX = as.numeric(gsub(",", ".", TMAX))) %>%
-  select(Date, TMAX)
+# El xlsx (72 MB) ocupa varios GB en memoria: se lee una sola vez y se guarda
+# la TMAX de la estación 87585 en un .rds chico (el mismo caché que usan 03 a 09).
+ruta_cache <- "datos/procesados/smn_87585_1991_2020.rds"
+if (file.exists(ruta_cache)) {
+  smn_1991 <- readRDS(ruta_cache)
+} else {
+  smn_1991 <- read_xlsx("datos/smn/smn_datos_meteorologicos_1991_2020.xlsx") %>%
+    filter(NRO_OMM == 87585) %>%
+    transmute(Date = as.Date(FECHA),
+              TMAX = suppressWarnings(as.numeric(gsub(",", ".", TMAX))))  # "S/D" -> NA
+  dir.create(dirname(ruta_cache), recursive = TRUE, showWarnings = FALSE)
+  saveRDS(smn_1991, ruta_cache)
+  gc()
+}
 
-smn_2021 <- read.delim('Datos TP FINAL/smn_datos_meteorologicos_desde_2021.lst') %>%
+smn_2021 <- read.delim('datos/smn/smn_datos_meteorologicos_desde_2021.lst') %>%
   filter(trimws(NRO_OMM) == '87585') %>%
   mutate(Date = as.Date(FECHA, format = '%d/%m/%Y'), TMAX = as.numeric(gsub(",", ".", TMAX))) %>%
   select(Date, TMAX)
@@ -48,7 +58,7 @@ extraer_info_sala <- function(filepath) {
   ))
 }
 
-path_carpeta <- "Datos TP FINAL/No HOBO"
+path_carpeta <- "datos/hobo"
 archivos_txt <- list.files(path = path_carpeta, pattern = "\\.txt$", full.names = TRUE)
 
 datos_sensores <- map_dfr(archivos_txt, function(path) {
@@ -162,7 +172,7 @@ g_general <- ggplot(predicciones_todas, aes(x = Date)) +
   facet_wrap(~ Etiqueta_Unica, scales = "free", ncol = 3) +
   scale_x_date(date_labels = "%b %Y") +
   labs(
-    title = "Ajuste del Modelo GLS en Todos los Sectores ('No HOBO')",
+    title = "Ajuste del Modelo GLS en Todos los Sectores",
     subtitle = "Escala de tiempo liberada independientemente por sector",
     x = "Fecha",
     y = "Temperatura (°C)",
@@ -200,5 +210,5 @@ g_pv <- ggplot(pred_pv, aes(x = Date, group = Subsector, color = Subsector)) +
 print(g_pv)
 
 # Guardar figura para el informe
-ggsave("graficos/fig_modelo_pv.png", g_pv, width = 8, height = 4.5, dpi = 300)
-ggsave("graficos/fig_modelo_todas_salas.png", g_general, width = 10, height = 7, dpi = 300)
+ggsave("resultados/figuras/fig_modelo_pv.png", g_pv, width = 8, height = 4.5, dpi = 300)
+ggsave("resultados/figuras/fig_modelo_todas_salas.png", g_general, width = 10, height = 7, dpi = 300)
