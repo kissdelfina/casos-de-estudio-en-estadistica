@@ -212,17 +212,31 @@ g1 <- ggplot(df_analisis, aes(x = fecha, y = cantidad, color = taxon)) +
   theme(legend.position = "top")
 print(g1)
 
-# Temperatura previa vs. captura diaria
-g2 <- ggplot(df_analisis %>% filter(!is.na(tasa_diaria), dias_exp < 100),
-             aes(x = temp_media_prev, y = tasa_diaria, color = taxon)) +
-  geom_point(size = 3, alpha = 0.8) +
-  geom_smooth(method = "lm", se = FALSE, linewidth = 0.8) +
+# Temperatura exterior vs. captura diaria, con las curvas de la binomial
+# negativa. Las curvas son la tasa diaria que predice el modelo (offset con
+# 1 día de exposición) para cada sala y taxón, en el rango de temperaturas
+# observado en esa sala. Como el modelo no tiene interacciones, todas tienen
+# la misma forma (+23 % por °C) y solo cambia el nivel.
+etiquetas_taxon <- c("Coleopteros" = "Coleópteros", "Lepidopteros" = "Lepidópteros")
+
+curvas_nb <- df_modelo %>%
+  group_by(sala) %>%
+  summarise(t_min = min(temp_media_prev), t_max = max(temp_media_prev), .groups = "drop") %>%
+  mutate(temp_media_prev = map2(t_min, t_max, ~ seq(.x, .y, length.out = 100))) %>%
+  unnest(temp_media_prev) %>%
+  crossing(taxon = unique(df_modelo$taxon)) %>%
+  mutate(dias_exp = 1)
+curvas_nb$tasa_predicha <- predict(mod_nb, newdata = curvas_nb, type = "response")
+
+g2 <- ggplot(df_modelo, aes(x = temp_media_prev, color = taxon)) +
+  geom_point(aes(y = cantidad / dias_exp), size = 3, alpha = 0.8) +
+  geom_line(data = curvas_nb, aes(y = tasa_predicha), linewidth = 0.9) +
   facet_wrap(~ sala, scales = "free_y") +
-  scale_color_manual(values = colores_taxon) +
-  labs(title = "Temperatura Previa vs. Tasa Diaria de Capturas (Capturas / Días)",
-       subtitle = "Corregir por días de exposición permite comparar períodos de distinta duración",
-       x = "Temperatura Media del Intervalo de Exposición (°C)",
-       y = "Tasa Diaria de Capturas (insectos/día)", color = "Taxón") +
+  scale_color_manual(values = colores_taxon, labels = etiquetas_taxon) +
+  labs(title = "Las capturas diarias aumentan con la temperatura exterior",
+       subtitle = "Puntos: revisiones de trampas. Curvas: binomial negativa (+23 % por °C, igual en todas las salas)",
+       x = "Temperatura media exterior del período de exposición (SMN, °C)",
+       y = "Capturas por día de exposición", color = "Taxón") +
   theme_bw(base_size = 11) +
   theme(legend.position = "top")
 print(g2)
