@@ -39,14 +39,14 @@ max_rezago <- 14  # cantidad máxima de días hacia atrás que se prueban
 # 1. SMN: TMAX y TMIN diaria de la estación 87585
 # ------------------------------------------------------------------------------
 
-# Uso una nueva versión de la caché para evitar leer un RDS
-# antiguo que solamente contiene TMAX.
-ruta_cache <- "datos/procesados/smn_87585_1991_2020_v2.rds"
+# Cachés del xlsx 1991-2020 (72 MB, lento y pesado de leer): la TMAX es la
+# misma que usan los otros scripts; la TMIN va en un caché aparte para no
+# modificar el que leen ellos. Si falta alguno, se lee el xlsx una sola vez.
+ruta_cache_tmax <- "datos/procesados/smn_87585_1991_2020.rds"
+ruta_cache_tmin <- "datos/procesados/smn_87585_tmin_1991_2020.rds"
 
-if (file.exists(ruta_cache)) {
-  smn_1991 <- readRDS(ruta_cache)
-} else {
-  smn_1991 <- read_xlsx(
+if (!file.exists(ruta_cache_tmax) || !file.exists(ruta_cache_tmin)) {
+  smn_xlsx <- read_xlsx(
     "datos/smn/smn_datos_meteorologicos_1991_2020.xlsx"
   ) %>%
     filter(NRO_OMM == 87585) %>%
@@ -55,12 +55,16 @@ if (file.exists(ruta_cache)) {
       TMAX = suppressWarnings(as.numeric(gsub(",", ".", TMAX))),
       TMIN = suppressWarnings(as.numeric(gsub(",", ".", TMIN)))
     )
-  
-  dir.create(dirname(ruta_cache), recursive = TRUE,
+  dir.create(dirname(ruta_cache_tmax), recursive = TRUE,
              showWarnings = FALSE)
-  saveRDS(smn_1991, ruta_cache)
+  if (!file.exists(ruta_cache_tmax)) saveRDS(select(smn_xlsx, Date, TMAX), ruta_cache_tmax)
+  if (!file.exists(ruta_cache_tmin)) saveRDS(select(smn_xlsx, Date, TMIN), ruta_cache_tmin)
+  rm(smn_xlsx)
   gc()
 }
+
+smn_1991 <- readRDS(ruta_cache_tmax) %>%
+  left_join(readRDS(ruta_cache_tmin), by = "Date")
 
 smn_2021 <- read.delim(
   "datos/smn/smn_datos_meteorologicos_desde_2021.lst"
@@ -94,7 +98,7 @@ smn <- smn %>%
 # ------------------------------------------------------------------------------
 # 2. HOBO: temperatura máxima diaria por archivo
 # ------------------------------------------------------------------------------
-# Misma lógica de etiquetas que modelo_temperatura.R, para que las series sean
+# Misma lógica de etiquetas que 03_modelo_rezagos.R, para que las series sean
 # las mismas y los resultados se puedan comparar.
 extraer_info_sala <- function(filepath) {
   fname <- basename(filepath)
@@ -109,7 +113,12 @@ extraer_info_sala <- function(filepath) {
   if (grepl("abajo", fname, ignore.case = TRUE)) subsector <- "Abajo"
   if (grepl("arriba", fname, ignore.case = TRUE)) subsector <- "Arriba"
   
-  sala_base <- gsub("[-_](Anexo|Ameghino|coleccion|laboratorio|abajo|arriba)", "", fname, ignore.case = TRUE)
+  # MACN-Or: son dos dataloggers con fechas superpuestas (colección antigua y
+  # Azara), igual que en 03_modelo_rezagos.R
+  if (grepl("azara", fname, ignore.case = TRUE) || grepl("04-01_2021", basename(filepath))) subsector <- "Azara"
+  if (grepl("MACN-Or-03_02_2020", basename(filepath))) subsector <- "Antigua"
+  
+  sala_base <- gsub("[-_](Anexo|Ameghino|coleccion|laboratorio|abajo|arriba|azara|antigua)", "", fname, ignore.case = TRUE)
   sala_base <- gsub("-", "_", sala_base)
   
   paste(sala_base, subsector, sep = " - ")
@@ -400,17 +409,17 @@ dir.create(
 
 write_csv(
   resumen_rezagos,
-  "resultados/tablas/rezagos_resumen.csv"
+  "resultados/tablas/rezagos_resumen_minymax.csv"
 )
 
 write_csv(
   coefs_rezagos,
-  "resultados/tablas/rezagos_coeficientes.csv"
+  "resultados/tablas/rezagos_coeficientes_minymax.csv"
 )
 
 write_csv(
   aic_rezagos,
-  "resultados/tablas/rezagos_aic.csv"
+  "resultados/tablas/rezagos_aic_minymax.csv"
 )
 
 # ------------------------------------------------------------------------------
