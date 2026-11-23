@@ -43,6 +43,23 @@
 #   que se sacó para que el script tarde la mitad.) Se pronostica día por
 #   día: para el día t solo se usan errores de días anteriores a t.
 #
+# INTERVALOS DE PREDICCIÓN
+#   Cada predicción se guarda con su error estándar: sigma para X·beta, y
+#   sigma·sqrt(1 - r' R^-1 r) para la corregida (la varianza condicional dados
+#   los errores de los días anteriores). No incluye la incertidumbre de beta,
+#   que con cientos de días de entrenamiento es chica. Se reporta qué
+#   porcentaje de los días observados cae dentro de predicho ± 1,96·EE
+#   (debería ser cerca de 95 %). Las predicciones de la máxima y de la mínima
+#   las usa 11_banda_min_max.R para armar la banda del día.
+#
+# MÁXIMA O MÍNIMA
+#   Por defecto modela la máxima interior con la TMAX del SMN. Con la variable
+#   de entorno VARIABLE=min modela la mínima interior con la TMIN, y las
+#   tablas y figuras llevan el sufijo _min:
+#     VARIABLE=min Rscript R/05_modelo_pronostico.R
+#   La TMIN sale del caché datos/procesados/smn_87585_tmin_1991_2020.rds, que
+#   genera R/modelo_rezagos_minymax.R.
+#
 # Igual que modelo_rezagos.R: se descartan el primer y el último día de cada
 # archivo, los rezagos se calculan sobre la serie completa del SMN, y si algo
 # falla se avisa. MACN-Or se separa en Antigua y Azara, como en
@@ -58,6 +75,13 @@ max_rezago   <- 14   # ventana máxima que se prueba (días hacia atrás)
 bloque       <- 30   # días que se predicen antes de reajustar
 memoria      <- 30   # días hacia atrás que usa la corrección con errores pasados
 min_entrena  <- 40   # mínimo de días del primer entrenamiento
+
+variable <- Sys.getenv("VARIABLE", "max")
+if (!variable %in% c("max", "min")) stop("VARIABLE tiene que ser max o min")
+exterior <- if (variable == "max") "TMAX" else "TMIN"   # columna del SMN
+sufijo   <- if (variable == "max") "" else "_min"        # para tablas y figuras
+nombre_var <- if (variable == "max") "máxima" else "mínima"
+cat("Modelando la", nombre_var, "interior con la", exterior, "del SMN\n")
 
 # Rutas: funcionan con la estructura nueva (datos/...) y con la vieja
 ruta <- function(nueva, vieja) if (file.exists(nueva)) nueva else vieja
@@ -89,24 +113,32 @@ if (file.exists(ruta_cache)) {
   saveRDS(smn_1991, ruta_cache)
   gc()
 }
+if (variable == "min") {
+  ruta_tmin <- "datos/procesados/smn_87585_tmin_1991_2020.rds"
+  if (!file.exists(ruta_tmin)) stop("Falta ", ruta_tmin, ": correr antes R/modelo_rezagos_minymax.R")
+  smn_1991 <- left_join(smn_1991, readRDS(ruta_tmin), by = "Date")
+}
 
 smn_2021 <- read.delim(ruta_lst) %>%
   filter(trimws(NRO_OMM) == "87585") %>%
   transmute(Date = as.Date(trimws(FECHA), format = "%d/%m/%Y"),
-            TMAX = suppressWarnings(as.numeric(trimws(TMAX))))
+            TMAX = suppressWarnings(as.numeric(trimws(TMAX))),
+            TMIN = suppressWarnings(as.numeric(trimws(TMIN))))
 
 smn <- bind_rows(smn_1991, smn_2021) %>%
+  mutate(EXT = .data[[exterior]]) %>%
   filter(!is.na(Date)) %>%
   distinct(Date, .keep_all = TRUE) %>%
   complete(Date = seq(min(Date), max(Date), by = "day")) %>%
   arrange(Date)
 
+# EXT es la TMAX o la TMIN, según la variable que se modela
 for (k in 0:max_rezago) {
-  smn[[paste0("TMAX_l", k)]] <- dplyr::lag(smn$TMAX, k)
+  smn[[paste0("EXT_l", k)]] <- dplyr::lag(smn$EXT, k)
 }
 
 # ------------------------------------------------------------------------------
-# 2. HOBO: máxima diaria por archivo
+# 2. HOBO: máxima (o mínima) diaria por archivo
 # ------------------------------------------------------------------------------
 # Misma lógica que 01_modelo_temperatura.R (incluye la separación de MACN-Or)
 extraer_etiqueta <- function(filepath) {
@@ -135,7 +167,7 @@ leer_hobo <- function(path) {
   tibble(Date = dmy(d[[1]]), temp = as.numeric(d[[3]])) %>%
     filter(!is.na(Date), !is.na(temp)) %>%
     group_by(Date) %>%
-    summarise(temp_max = max(temp), .groups = "drop") %>%
+    summarise(temp = if (variable == "max") max(temp) else min(temp), .groups = "drop") %>%
     filter(Date > min(Date), Date < max(Date)) %>%   # primer y último día incompletos
     mutate(Archivo = basename(path), Serie = extraer_etiqueta(path))
 }
@@ -147,8 +179,8 @@ datos_hobo <- map_dfr(archivos, leer_hobo)
 # 3. Funciones de ajuste y evaluación
 # ------------------------------------------------------------------------------
 formula_rezagos <- function(desde, hasta) {
-  reformulate(c(paste0("TMAX_l", desde:hasta), "sin_year", "cos_year"),
-              response = "temp_max")
+  reformulate(c(paste0("EXT_l", desde:hasta), "sin_year", "cos_year"),
+              response = "temp")
 }
 
 ajustar <- function(f, datos) {
@@ -170,18 +202,20 @@ correlaciones <- function(m) {
 #   X·beta + r' R^-1 e, con los errores de días anteriores a cada día
 #   (como mucho 'memoria' días atrás). Si no hay días anteriores cercanos,
 #   la corrección es 0.
+#   Devuelve también el EE de la predicción: sigma·sqrt(1 - r' R^-1 r).
 predecir_corregido <- function(m, df, idx_prueba) {
   xb  <- as.numeric(predict(m, newdata = df))
-  err <- df$temp_max - xb
+  err <- df$temp - xb
   rho <- correlaciones(m)
-  corr <- map_dbl(idx_prueba, function(i) {
+  res <- map_dfr(idx_prueba, function(i) {
     previos <- which(df$t < df$t[i] & df$t >= df$t[i] - memoria)
-    if (length(previos) == 0) return(0)
+    if (length(previos) == 0) return(tibble(corr = 0, var_rel = 1))
     R <- outer(df$t[previos], df$t[previos], function(a, b) rho[abs(a - b) + 1])
     r <- rho[df$t[i] - df$t[previos] + 1]
-    sum(r * solve(R, err[previos]))
+    tibble(corr = sum(r * solve(R, err[previos])),
+           var_rel = max(1 - sum(r * solve(R, r)), 0))
   })
-  xb[idx_prueba] + corr
+  tibble(predicho = xb[idx_prueba] + res$corr, ee = m$sigma * sqrt(res$var_rel))
 }
 
 # Elige la ventana K por AIC en los datos de entrenamiento
@@ -207,7 +241,7 @@ evaluar_serie <- function(df_serie) {
     left_join(smn, by = "Date") %>%
     mutate(sin_year = sin(2 * pi * yday(Date) / 365.25),
            cos_year = cos(2 * pi * yday(Date) / 365.25)) %>%
-    drop_na(temp_max, all_of(paste0("TMAX_l", 0:max_rezago))) %>%
+    drop_na(temp, all_of(paste0("EXT_l", 0:max_rezago))) %>%
     arrange(Date) %>%
     mutate(t = as.integer(Date - min(Date)))
 
@@ -226,7 +260,7 @@ evaluar_serie <- function(df_serie) {
   formulas <- list(
     con_hoy      = formula_rezagos(0, k_con),
     sin_hoy      = formula_rezagos(1, k_sin),
-    sin_exterior = temp_max ~ sin_year + cos_year
+    sin_exterior = temp ~ sin_year + cos_year
   )
 
   # Origen móvil: entrenar hasta el corte, predecir el bloque siguiente
@@ -245,11 +279,12 @@ evaluar_serie <- function(df_serie) {
         return(NULL)
       }
       bind_rows(
-        tibble(Modelo = nombre, predicho = as.numeric(predict(m, newdata = prueba))),
-        tibble(Modelo = paste0(nombre, "_corr"), predicho = predecir_corregido(m, hasta, idx))
+        tibble(Modelo = nombre, predicho = as.numeric(predict(m, newdata = prueba)),
+               ee = m$sigma),
+        predecir_corregido(m, hasta, idx) %>% mutate(Modelo = paste0(nombre, "_corr"), .before = 1)
       ) %>%
         mutate(Serie = serie, Date = rep(prueba$Date, length.out = n()),
-               observado = rep(prueba$temp_max, length.out = n()), .before = 1)
+               observado = rep(prueba$temp, length.out = n()), .before = 1)
     })
   })
 
@@ -272,7 +307,10 @@ info         <- map_dfr(resultados, "info")
 errores <- predicciones %>%
   mutate(error = predicho - observado) %>%
   group_by(Serie, Modelo) %>%
-  summarise(RMSE = sqrt(mean(error^2)), MAE = mean(abs(error)), .groups = "drop")
+  summarise(RMSE = sqrt(mean(error^2)), MAE = mean(abs(error)),
+            # % de días dentro del intervalo de predicción del 95 %
+            Cobertura_95 = 100 * mean(abs(error) <= 1.96 * ee),
+            Ancho_95 = mean(2 * 1.96 * ee), .groups = "drop")
 
 resumen <- errores %>%
   select(Serie, Modelo, RMSE) %>%
@@ -289,11 +327,18 @@ resumen <- errores %>%
          Perdida_sin_hoy_pct, Mejora_vs_sin_ext_pct) %>%
   arrange(desc(Perdida_sin_hoy_pct))
 
-cat("\n=== PRONÓSTICO FUERA DE LA MUESTRA (RMSE en °C) ===\n")
+cat("\n=== PRONÓSTICO FUERA DE LA MUESTRA DE LA", toupper(nombre_var), "(RMSE en °C) ===\n")
 print(resumen %>% mutate(across(where(is.double), ~ round(.x, 2))), n = Inf, width = Inf)
 
-write_csv(resumen, file.path(dir_tablas, "pronostico_con_y_sin_hoy.csv"))
-write_csv(errores, file.path(dir_tablas, "pronostico_errores_por_modelo.csv"))
+write_csv(resumen, file.path(dir_tablas, paste0("pronostico_con_y_sin_hoy", sufijo, ".csv")))
+write_csv(errores, file.path(dir_tablas, paste0("pronostico_errores_por_modelo", sufijo, ".csv")))
+# Predicciones día por día con su EE (las usa 11_banda_min_max.R)
+write_csv(predicciones, file.path(dir_tablas, paste0("pronostico_predicciones", sufijo, ".csv")))
+
+cat("\n=== COBERTURA DEL INTERVALO DEL 95 % (% de días adentro) ===\n")
+print(errores %>% select(Serie, Modelo, Cobertura_95) %>%
+        pivot_wider(names_from = Modelo, values_from = Cobertura_95) %>%
+        mutate(across(where(is.double), ~ round(.x, 1))), n = Inf, width = Inf)
 
 # Corrección con el error de los días anteriores
 resumen_corr <- errores %>%
@@ -316,7 +361,7 @@ resumen_corr <- errores %>%
 
 cat("\n=== CORRECCIÓN CON EL ERROR DE LOS DÍAS ANTERIORES (RMSE en °C) ===\n")
 print(resumen_corr %>% mutate(across(where(is.double), ~ round(.x, 2))), n = Inf, width = Inf)
-write_csv(resumen_corr, file.path(dir_tablas, "pronostico_correccion.csv"))
+write_csv(resumen_corr, file.path(dir_tablas, paste0("pronostico_correccion", sufijo, ".csv")))
 
 # ------------------------------------------------------------------------------
 # 5. Gráfico para la presentación
@@ -324,6 +369,8 @@ write_csv(resumen_corr, file.path(dir_tablas, "pronostico_correccion.csv"))
 # Solo las series con al menos 60 días evaluados: en MACN-Ar (38) y MACN-In (12)
 # el entrenamiento tiene menos de 40 días, el seno y el coseno extrapolan mal, y
 # el RMSE no es comparable. Quedan en la tabla, pero no en el gráfico.
+etiquetas_modelo <- c("Solo época del año", paste("Sin la", exterior, "de hoy"),
+                      paste("Con la", exterior, "de hoy"))
 series_graf <- resumen %>% filter(Dias_evaluados >= 60) %>%
   arrange(Perdida_sin_hoy_pct) %>% pull(Serie)
 
@@ -331,34 +378,33 @@ datos_graf <- errores %>%
   filter(Serie %in% series_graf, Modelo %in% c("sin_exterior", "sin_hoy", "con_hoy")) %>%
   mutate(Serie = factor(Serie, levels = series_graf),
          Modelo = factor(Modelo, levels = c("sin_exterior", "sin_hoy", "con_hoy"),
-                         labels = c("Solo época del año", "Sin la TMAX de hoy",
-                                    "Con la TMAX de hoy")))
+                         labels = etiquetas_modelo))
 
 g_rmse <- ggplot(datos_graf, aes(x = RMSE, y = Serie)) +
   geom_line(aes(group = Serie), color = "gray80", linewidth = 1) +
   geom_point(aes(color = Modelo), size = 3.5) +
-  scale_color_manual(values = c("Solo época del año" = "gray70",
-                                "Sin la TMAX de hoy" = "#2E6FD8",
-                                "Con la TMAX de hoy" = "gray25")) +
+  scale_color_manual(values = setNames(c("gray70", "#2E6FD8", "gray25"), etiquetas_modelo)) +
   labs(
-    title = "Sin la TMAX de hoy, el error sube mucho en las 2 salas rápidas y poco en el resto",
-    subtitle = "Error de pronóstico fuera de la muestra (origen móvil, bloques de 30 días).\nOrdenado por cuánto empeora el pronóstico sin la TMAX de hoy.",
-    x = "RMSE de la máxima interior (°C)", y = NULL, color = NULL
+    title = if (variable == "max")
+      "Sin la TMAX de hoy, el error sube mucho en las 2 salas rápidas y poco en el resto" else
+      "Pronóstico de la mínima interior: con y sin la TMIN de hoy",
+    subtitle = paste0("Error de pronóstico fuera de la muestra (origen móvil, bloques de 30 días).\nOrdenado por cuánto empeora el pronóstico sin la ", exterior, " de hoy."),
+    x = paste0("RMSE de la ", nombre_var, " interior (°C)"), y = NULL, color = NULL
   ) +
   theme_minimal(base_size = 18) +
   theme(legend.position = "top", panel.grid.minor = element_blank(),
         plot.title.position = "plot")
 
 print(g_rmse)
-ggsave(file.path(dir_figs, "fig_pronostico_rmse.png"), g_rmse, width = 13, height = 7.5, dpi = 300)
+ggsave(file.path(dir_figs, paste0("fig_pronostico_rmse", sufijo, ".png")), g_rmse, width = 13, height = 7.5, dpi = 300)
 
 # ------------------------------------------------------------------------------
 # 6. Gráfico de la corrección con el error de los días anteriores
 # ------------------------------------------------------------------------------
-modelos_corr <- c("sin_hoy" = "Sin la TMAX de hoy",
+modelos_corr <- c("sin_hoy" = paste("Sin la", exterior, "de hoy"),
                   "sin_exterior_corr" = "Solo época del año + días anteriores de la sala",
-                  "sin_hoy_corr" = "Sin la TMAX de hoy + días anteriores de la sala",
-                  "con_hoy_corr" = "Con la TMAX de hoy + días anteriores de la sala")
+                  "sin_hoy_corr" = paste("Sin la", exterior, "de hoy + días anteriores de la sala"),
+                  "con_hoy_corr" = paste("Con la", exterior, "de hoy + días anteriores de la sala"))
 orden_corr <- resumen_corr %>% filter(Serie %in% series_graf) %>%
   arrange(RMSE_sin_hoy_corr) %>% pull(Serie)
 
@@ -375,11 +421,11 @@ g_corr <- ggplot(datos_corr, aes(x = RMSE, y = Serie)) +
   labs(
     title = "Conocer la temperatura de la sala de los días anteriores baja mucho el error",
     subtitle = "Error de pronóstico fuera de la muestra (origen móvil, bloques de 30 días), corrigiendo con\nlos errores de los días anteriores según el AR(1) estimado.",
-    x = "RMSE de la máxima interior (°C)", y = NULL, color = NULL
+    x = paste0("RMSE de la ", nombre_var, " interior (°C)"), y = NULL, color = NULL
   ) +
   theme_minimal(base_size = 16) +
   theme(legend.position = "top", panel.grid.minor = element_blank(),
         plot.title.position = "plot")
 
 print(g_corr)
-ggsave(file.path(dir_figs, "fig_pronostico_correccion.png"), g_corr, width = 13, height = 8, dpi = 300)
+ggsave(file.path(dir_figs, paste0("fig_pronostico_correccion", sufijo, ".png")), g_corr, width = 13, height = 8, dpi = 300)
