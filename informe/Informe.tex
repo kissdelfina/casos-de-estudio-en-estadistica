@@ -98,7 +98,7 @@
 % ==============================================================================
 \section{Introducción y Objetivos}
 
-Las colecciones de historia natural albergan bienes culturales y científicos irremplazables cuya preservación a largo plazo está condicionada por el ambiente de guarda...
+Las colecciones de historia natural albergan bienes culturales y científicos irremplazables cuya preservación a largo plazo está condicionada por el ambiente de guarda. No solo los efectos de la temperatura y humedad favorecen la degradación de material orgánico sino que también dan las condiciones necesarias para que distintos organismos que se alimentan de la mustra proliferen. Es por esto que nuestro interés con el trabajo es desarrollar herramientas que permitan entender cómo las condiciones climáticas del exterior repercuten en las del interior, pues este conocimiento nos da las bases de como tratar cada sala y que tener en cuenta a la hora de tomar medidas para proteger la muestra. Buscamos también dejar planteadas las bases para un modelo que permita predecir la aparición de plagas como la de coleópteros y lepidópteros a partir de las condiciones de temperatura y humedad, sobre el cual se puede construir con más datos y nueva teoría.
 
 \subsection{Preguntas de investigación e hipótesis}
 \begin{enumerate}
@@ -432,8 +432,9 @@ Estos resultados deben leerse con cautela. Son 46 revisiones de un solo período
 Se identifican dos tipologías edilicias en el museo: salas expuestas que requieren refuerzo de aislamiento térmico, y salas protegidas que mantienen una elevada estabilidad pasiva...
 
 \subsection{Limitaciones del estudio}
-Es necesario señalar que el muestreo de trampas biológicas presentó revisiones muy espaciadas e intervalos desiguales (desde 9 hasta 161 días), lo cual restringe la posibilidad de predecir capturas en horizontes de corto plazo. No obstante, el control por tiempo de exposición mediante modelos con offset permite extraer conclusiones válidas sobre la estacionalidad del riesgo...
-
+Es necesario señalar que el muestreo de trampas biológicas presentó revisiones muy espaciadas e intervalos desiguales (desde 9 hasta 161 días), lo cual restringe la posibilidad de predecir capturas en horizontes de corto plazo. No obstante, el control por tiempo de exposición mediante modelos con offset permite extraer conclusiones válidas sobre la estacionalidad del riesgo. Idealmente, si se tuviesen más muestras con un patrón de captura regular se podría presentar un estudio más robusto sobre el modelo de aparición de plagas. 
+Por otro lado, nuestra adaptación del modelo de rezagos distribuidos no tiene en cuenta la versión clásica que no solo utiliza los datos del mismo día y los k-1 días anteriores como variables predictoras si no que también modela una autocorrelación de errores con el mismo índice, es decir AR(k). Asimismo hay otro tipo de modelados que este problema permite explorar como un modelo aditivo general (GAM) donde, por ejemplo, la distribución sinusoidal del tiempo es inferida por el mismo al solo pasarle como variable el tiempo.
+Finalmente se podrían utilizar mediciones adicionales a las que brinda el SMN para contrastar el análisis.
 % ==============================================================================
 % 7. REFERENCIAS BIBLIOGRÁFICAS
 % ==============================================================================
