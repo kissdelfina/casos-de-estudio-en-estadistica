@@ -73,8 +73,12 @@ extraer_info_sala <- function(filepath) {
   if (grepl("laboratorio", fname, ignore.case = TRUE)) subsector <- "Laboratorio"
   if (grepl("abajo", fname, ignore.case = TRUE)) subsector <- "Abajo"
   if (grepl("arriba", fname, ignore.case = TRUE)) subsector <- "Arriba"
+  # MACN-Or: son dos dataloggers con fechas superpuestas (colección antigua y
+  # Azara), igual que en 03_modelo_rezagos.R
+  if (grepl("azara", fname, ignore.case = TRUE) || grepl("04-01_2021", basename(filepath))) subsector <- "Azara"
+  if (grepl("MACN-Or-03_02_2020", basename(filepath))) subsector <- "Antigua"
 
-  sala_base <- gsub("[-_](Anexo|Ameghino|coleccion|laboratorio|abajo|arriba)", "", fname, ignore.case = TRUE)
+  sala_base <- gsub("[-_](Anexo|Ameghino|coleccion|laboratorio|abajo|arriba|azara|antigua)", "", fname, ignore.case = TRUE)
   sala_base <- gsub("-", "_", sala_base)
 
   paste(sala_base, subsector, sep = " - ")

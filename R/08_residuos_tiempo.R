@@ -26,6 +26,11 @@
 # 1 y 14 con todos los datos de la serie. Ejemplo:
 #   SERIE="MACN_Pv - Anexo" SIN_HOY=1 Rscript R/08_residuos_tiempo.R
 #
+# Con INFORME=1 se comparan solo el modelo sin estructura y el AR(1), sin
+# título (va en el epígrafe de LaTeX), y se guarda en
+# resultados/figuras/fig_residuos_ar1.png para el anexo del informe:
+#   SERIE="MACN_Pv - Ameghino" INFORME=1 Rscript R/08_residuos_tiempo.R
+#
 # Necesita resultados/tablas/rezagos_resumen.csv, que genera el 03.
 # ==============================================================================
 
@@ -36,6 +41,7 @@ library(patchwork)
 
 serie_elegida <- Sys.getenv("SERIE", "BA_Pb - General / Normal")
 sin_hoy <- Sys.getenv("SIN_HOY", "0") == "1"
+informe <- Sys.getenv("INFORME", "0") == "1"
 desde <- if (sin_hoy) 1 else 0   # primer rezago del modelo
 max_rezago <- 14
 
@@ -120,6 +126,7 @@ modelos <- list(
   "AR(1)"          = gls(f, data = df, method = "ML", correlation = corAR1(form = ~ t)),
   "ARMA(1,1)"      = gls(f, data = df, method = "ML", correlation = corARMA(form = ~ t, p = 1, q = 1))
 )
+if (informe) modelos <- modelos[c("Sin estructura", "AR(1)")]
 
 # Ljung-Box a 14 días sobre una grilla diaria (respeta los huecos)
 grilla_res <- function(res, t) { g <- rep(NA_real_, max(t) + 1); g[t + 1] <- res; g }
@@ -140,14 +147,18 @@ acfs <- imap_dfr(modelos, function(m, nombre) {
 })
 resumen <- imap_dfr(modelos, function(m, nombre) {
   cor_txt <- if (is.null(m$modelStruct$corStruct)) "" else
-    paste0(" · parámetros: ", paste(format(round(coef(m$modelStruct$corStruct, unconstrained = FALSE), 2),
+    paste0(if (informe) " · φ = " else " · parámetros: ", paste(format(round(coef(m$modelStruct$corStruct, unconstrained = FALSE), 2),
                                            decimal.mark = ","), collapse = " / "))
   tibble(Modelo = nombre, AIC = AIC(m),
          p_LB = ljung_box(resid(m, type = "normalized"), df$t, 14, params_cor[[nombre]]),
          cor_txt = cor_txt)
 }) %>%
   mutate(dAIC = AIC - min(AIC),
-         Titulo = sprintf("%s — ΔAIC = %s · Ljung-Box (14 días) p %s%s", Modelo,
+         # En el informe los títulos quedan cortos: solo el modelo y el φ estimado
+         Titulo_inf = ifelse(Modelo == "AR(1)", paste0("Con AR(1)", sub(" · ", " (", cor_txt), ")"),
+                             "Sin AR(1): errores independientes"),
+         Titulo = sprintf("%s — ΔAIC = %s · Ljung-Box (14 días) p %s%s",
+                          if (informe) recode(Modelo, "Sin estructura" = "Sin AR(1): errores independientes") else Modelo,
                           format(round(dAIC, 1), decimal.mark = ",", trim = TRUE),
                           ifelse(p_LB < 0.001, "< 0,001", paste("=", format(round(p_LB, 3), decimal.mark = ","))),
                           cor_txt))
@@ -156,7 +167,7 @@ resumen$DE_residuo <- map_dbl(modelos, ~ sd(resid(.x, type = "response")))
 print(resumen %>% select(Modelo, dAIC, p_LB, DE_residuo))
 
 orden <- names(modelos)
-etiquetas <- setNames(resumen$Titulo, resumen$Modelo)
+etiquetas <- setNames(if (informe) resumen$Titulo_inf else resumen$Titulo, resumen$Modelo)
 residuos <- residuos %>% mutate(Modelo = factor(Modelo, levels = orden, labels = etiquetas[orden]))
 acfs     <- acfs     %>% mutate(Modelo = factor(Modelo, levels = orden, labels = etiquetas[orden]))
 
@@ -201,7 +212,8 @@ g_acf <- ggplot(acfs, aes(Rezago, ACF)) +
   scale_color_manual(values = c(`TRUE` = acento, `FALSE` = tinta), guide = "none") +
   facet_wrap(~ Modelo, ncol = 1, labeller = labeller(Modelo = function(x) rep(" ", length(x)))) +
   scale_x_continuous(breaks = c(1, 7, 14, 21)) +
-  labs(x = "Rezago (días)", y = "ACF de los residuos") +
+  labs(x = if (informe) "Días de separación" else "Rezago (días)",
+       y = if (informe) "Autocorrelación de los residuos" else "ACF de los residuos") +
   tema
 
 g <- (g_tiempo | g_acf) +
@@ -222,5 +234,12 @@ nombre_archivo <- paste0("resultados/figuras/fig_residuos_tiempo_",
                          gsub("[^A-Za-z]+", "_", nombre_serie),
                          if (sin_hoy) "_sin_hoy" else "", ".png")
 dir.create("resultados/figuras", recursive = TRUE, showWarnings = FALSE)
-ggsave(nombre_archivo, g, width = 15, height = 9, dpi = 200, bg = "white")
+if (informe) {
+  # Sin título ni subtítulo: la explicación va en el epígrafe del informe
+  g <- (g_tiempo | g_acf) + plot_layout(widths = c(2.6, 1))
+  nombre_archivo <- "resultados/figuras/fig_residuos_ar1.png"
+  ggsave(nombre_archivo, g, width = 11, height = 5.2, dpi = 300, bg = "white")
+} else {
+  ggsave(nombre_archivo, g, width = 15, height = 9, dpi = 200, bg = "white")
+}
 cat("Figura guardada en", nombre_archivo, "\n")
